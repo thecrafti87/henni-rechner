@@ -1,7 +1,33 @@
 # Henni-Rechner
 
-Ein Längenmaß-Rechner mit der Einheit **Henni** (1 Henni = 1,70 m). Rechnet Längen,
-Flächen und Räume um.
+Ein Längenmaß-Rechner mit der Einheit **Henni**. Rechnet Längen, Flächen und Räume um.
+
+## Was ein Henni ist
+
+Der Henni ist **keine Naturkonstante**. Wie jedes Längennormal gilt er nur unter
+festgelegten Bedingungen — das Urmeter galt aus demselben Grund nur bei 0 °C.
+
+| | |
+| --- | --- |
+| **Nennwert** | 1 Henni = 1,700 m |
+| **Bezugsbedingungen** | Arbeitszustand, 21 °C |
+
+Zwei Größen verändern ihn:
+
+- **Zustand.** Der *Roh-Henni* ist der Körper selbst (1,670 m). Der *Arbeits-Henni* ist
+  derselbe Körper in Arbeitsschuhen; die Differenz ist die Sohle mit 30 mm. Der
+  veröffentlichte Wert 1,70 m ist der Arbeits-Henni, deshalb ist er der Vorgabezustand.
+- **Temperatur.** Körper und Sohle dehnen sich unterschiedlich stark und werden deshalb
+  getrennt gerechnet: Gewebe mit 6,9 × 10⁻⁵ /K (lineare Ausdehnung von Wasser), Gummi mit
+  2,0 × 10⁻⁴ /K. Über die einstellbare Spanne von −10 bis 45 °C bewegt sich der Henni um
+  knapp sieben Millimeter.
+
+Sichtbar wird das nicht am Ergebnis in Hennis — dort steckt es in den hinteren
+Nachkommastellen —, sondern am ausgewiesenen Wert der Einheit selbst, in Millimetern und
+ppm. Genau so klein sind die Effekte, um die es in der Längenmesstechnik geht.
+
+Die 30 mm Sohlenhöhe sind ein üblicher Wert für Sicherheitsschuhe, kein gemessener. Wer
+nachmisst, ändert `SOHLE_M` in `index.html` — alles andere folgt daraus.
 
 Läuft unter **https://henni-rechner.de**
 
