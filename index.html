@@ -860,23 +860,23 @@
     const ppm = (L - nenn) / nenn * 1e6
     const wort = ZUSTAND_WORT[zustand]
 
-    document.getElementById('definitionWert').textContent = `1 Henni = ${genau(L, 3)} m`
+    document.getElementById('definitionWert').textContent = `1 Henni = ${genau(L, 3)} m`
     document.getElementById('definitionSatz').textContent =
-      `${wort} bei ${zahl(temperatur, 1)} °C. Alle Werte auf dieser Seite rechnen dagegen.`
-    document.getElementById('skalaSpitze').textContent = `${genau(L, 2)} m`
+      `${wort} bei ${zahl(temperatur, 1)} °C. Alle Werte auf dieser Seite rechnen dagegen.`
+    document.getElementById('skalaSpitze').textContent = `${genau(L, 2)} m`
 
     const bericht = document.getElementById('normstand')
     if (Math.abs(abwMm) < 0.005) {
       bericht.innerHTML =
         `<b>Bezugsbedingungen.</b> ${wort} bei ${zahl(BEZUGSTEMPERATUR, 0)} °C — ` +
-        `die Einheit misst ihren Nennwert von ${mm(nenn * 1000)} mm.`
+        `die Einheit misst ihren Nennwert von ${mm(nenn * 1000)} mm.`
       return
     }
     const richtung = abwMm > 0 ? 'länger' : 'kürzer'
     bericht.innerHTML =
-      `<b>${mm(L * 1000)} mm</b> statt ${mm(nenn * 1000)} mm — ` +
-      `<span class="weg">${abwMm > 0 ? '+' : '−'}${genau(Math.abs(abwMm), 2)} mm</span> ` +
-      `(${abwMm > 0 ? '+' : '−'}${ohnePunkt(Math.abs(ppm))} ppm), also ${richtung} als bei ` +
+      `<b>${mm(L * 1000)} mm</b> statt ${mm(nenn * 1000)} mm — ` +
+      `<span class="weg">${abwMm > 0 ? '+' : '−'}${genau(Math.abs(abwMm), 2)} mm</span> ` +
+      `(${abwMm > 0 ? '+' : '−'}${ohnePunkt(Math.abs(ppm))} ppm), also ${richtung} als bei ` +
       `${zahl(BEZUGSTEMPERATUR, 0)} °C.`
   }
 
