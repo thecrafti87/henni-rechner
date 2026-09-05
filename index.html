@@ -1,0 +1,835 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Henni-Rechner — Längen, Flächen und Räume in Henni</title>
+<meta name="description" content="1 Henni = 1,70 m. Längen, Flächen und Räume in die Einheit Henni umrechnen — mit Bezugsgrößen vom DIN-A4-Blatt bis zum Mount Everest.">
+<meta name="theme-color" content="#f2b705" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#101116" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta property="og:title" content="Henni-Rechner">
+<meta property="og:description" content="1 Henni = 1,70 m. Längen, Flächen und Räume umrechnen.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://henni-rechner.de/">
+<meta property="og:image" content="https://henni-rechner.de/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+</head>
+<body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Archivo:wght@400;500;600;700&display=swap">
+
+<style>
+  /* Farbwelt: Maßband. Signalgelb auf Tiefschwarz, dazu ein kühles Grau als Grund —
+     bewusst kein Cremeton, das Ding soll nach Werkzeug aussehen, nicht nach Grußkarte. */
+  :root {
+    --grund: #e8e9ec;
+    --flaeche: #ffffff;
+    --flaeche-leise: #f2f3f6;
+    --tinte: #14151a;
+    --tinte-leise: #55585f;
+    --tinte-fern: #8b8f98;
+    --linie: #d5d7dd;
+    --band: #f2b705;
+    --band-tief: #a87d00;
+    --band-hauch: #fdf3d4;
+    --schatten: 0 1px 2px rgba(20,21,26,.06), 0 10px 30px rgba(20,21,26,.08);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --grund: #101116;
+      --flaeche: #1a1c23;
+      --flaeche-leise: #22252e;
+      --tinte: #f2f3f6;
+      --tinte-leise: #b0b4bd;
+      --tinte-fern: #7d818b;
+      --linie: #2e323c;
+      --band: #ffc91f;
+      --band-tief: #ffd95c;
+      --band-hauch: rgba(255, 201, 31, .13);
+      --schatten: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.45);
+    }
+  }
+  :root[data-theme="dark"] {
+    --grund: #101116;
+    --flaeche: #1a1c23;
+    --flaeche-leise: #22252e;
+    --tinte: #f2f3f6;
+    --tinte-leise: #b0b4bd;
+    --tinte-fern: #7d818b;
+    --linie: #2e323c;
+    --band: #ffc91f;
+    --band-tief: #ffd95c;
+    --band-hauch: rgba(255, 201, 31, .13);
+    --schatten: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.45);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--grund);
+    color: var(--tinte-leise);
+    font-family: "Archivo", system-ui, sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  .bogen { max-width: 720px; margin: 0 auto; padding: 40px 18px 80px; }
+
+  /* ── Kopf ───────────────────────────────────────────────────────────── */
+  .marke {
+    font-size: 11.5px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--band-tief); margin: 0 0 10px;
+  }
+  h1 {
+    font-family: "Archivo Black", system-ui, sans-serif; font-weight: 400;
+    font-size: clamp(38px, 9vw, 68px); line-height: .95; color: var(--tinte);
+    margin: 0 0 14px; letter-spacing: -.03em;
+  }
+  .satz { font-size: 17px; max-width: 46ch; margin: 0 0 4px; }
+
+  /* Das Maßband als Zierleiste — echte Skala, keine Deko ohne Bedeutung. */
+  .band {
+    height: 30px; margin: 26px 0 30px; border-radius: 5px; background: var(--band);
+    display: flex; align-items: flex-end; overflow: hidden; position: relative;
+    box-shadow: var(--schatten);
+  }
+  .band i { flex: 1; background: #14151a; width: 1px; opacity: .8; }
+  .band i.lang { height: 15px; }
+  .band i.kurz { height: 8px; }
+  .band .zahl {
+    position: absolute; left: 9px; top: 3px; font-size: 10.5px; font-weight: 700;
+    color: #14151a; letter-spacing: .1em; text-transform: uppercase;
+  }
+
+  /* ── Eingabe ────────────────────────────────────────────────────────── */
+  .eingabe {
+    background: var(--flaeche); border: 1px solid var(--linie); border-radius: 16px;
+    padding: 20px; box-shadow: var(--schatten); margin-bottom: 20px;
+  }
+  label {
+    display: block; font-size: 12px; font-weight: 700; letter-spacing: .09em;
+    text-transform: uppercase; color: var(--tinte-fern); margin-bottom: 9px;
+  }
+  .reihe { display: flex; gap: 10px; flex-wrap: wrap; }
+  input[type="number"], select {
+    font-family: "Archivo", sans-serif; font-size: 20px; font-weight: 600;
+    color: var(--tinte); background: var(--flaeche-leise);
+    border: 2px solid transparent; border-radius: 12px; padding: 13px 15px;
+    min-height: 56px; outline: none; transition: border-color .15s;
+  }
+  input[type="number"] { flex: 1 1 150px; min-width: 0; font-variant-numeric: tabular-nums; }
+  select { flex: 0 1 auto; cursor: pointer; }
+  input:focus, select:focus { border-color: var(--band); }
+  input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { opacity: .35; }
+
+  /* ── Ergebnis ───────────────────────────────────────────────────────── */
+  /* Die Ergebniskarte kippt BEWUSST nicht mit dem Design mit: Sie ist das Schild des
+     Maessbands und bleibt in beiden Modi dunkel mit gelber Schrift. Vorher war der
+     Hintergrund `var(--tinte)` — der dreht sich im Dunkelmodus um, und die Karte waere
+     hell geworden. Alle Farben hier deshalb fest, nicht ueber Token. */
+  .ergebnis {
+    background: #14151a; border-radius: 16px; padding: 26px 22px;
+    margin-bottom: 20px; box-shadow: var(--schatten);
+  }
+  .ergebnis .wert {
+    font-family: "Archivo Black", sans-serif; font-weight: 400;
+    font-size: clamp(44px, 12vw, 84px); line-height: .92;
+    letter-spacing: -.035em; font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+  }
+  .ergebnis .einheit {
+    font-family: "Archivo Black", sans-serif; font-size: clamp(19px, 4.5vw, 27px);
+    color: #e8e9ec; margin-left: 8px; letter-spacing: -.01em;
+  }
+  .ergebnis .wert { color: #f2b705; }
+  .ergebnis .dazu {
+    margin: 12px 0 0; font-size: 15px; color: #9a9da6;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Die Männchen ───────────────────────────────────────────────────── */
+  .bild {
+    background: var(--flaeche); border: 1px solid var(--linie); border-radius: 16px;
+    padding: 20px; margin-bottom: 20px; box-shadow: var(--schatten);
+  }
+  .figuren {
+    display: flex; align-items: flex-end; gap: 5px; flex-wrap: wrap;
+    min-height: 74px; margin-top: 4px;
+  }
+  .figuren img { display: block; flex: 0 0 auto; }
+  .figuren .rest { opacity: .45; }
+  /* Der angefangene Henni: fester Kasten, das Bild sitzt mit den Fuessen am Boden und
+     wird oben abgeschnitten. */
+  .figuren .teil { display: block; flex: 0 0 auto; position: relative; overflow: hidden; }
+  .figuren .teil img { position: absolute; bottom: 0; left: 0; }
+  .hinweis-klein { font-size: 13.5px; color: var(--tinte-fern); margin: 11px 0 0; }
+
+  /* ── Tabelle ────────────────────────────────────────────────────────── */
+  .tabelle {
+    background: var(--flaeche); border: 1px solid var(--linie); border-radius: 16px;
+    overflow: hidden; box-shadow: var(--schatten); margin-bottom: 34px;
+  }
+  .zeile {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 14px;
+    padding: 12px 19px; border-bottom: 1px solid var(--linie);
+  }
+  .zeile:last-child { border-bottom: none; }
+  .zeile .name { font-weight: 600; color: var(--tinte-leise); }
+  .zeile .zahl {
+    font-weight: 700; color: var(--tinte); font-variant-numeric: tabular-nums;
+    text-align: right; overflow-wrap: anywhere;
+  }
+
+  /* ── Vergleiche ─────────────────────────────────────────────────────── */
+  h2 {
+    font-family: "Archivo Black", sans-serif; font-weight: 400; font-size: 24px;
+    color: var(--tinte); margin: 0 0 5px; letter-spacing: -.015em;
+  }
+  .unter { margin: 0 0 16px; font-size: 15px; color: var(--tinte-fern); }
+  .vergleich {
+    display: flex; justify-content: space-between; align-items: center; gap: 14px;
+    padding: 11px 0; border-bottom: 1px dashed var(--linie);
+  }
+  .vergleich:last-child { border-bottom: none; }
+  /* Beide Spalten muessen schrumpfen koennen. Vorher stand rechts `white-space: nowrap`;
+     bei langen Einheiten („Quadrat-Hennis") neben langen Namen („Zweizimmerwohnung") schob
+     das die ganze Seite am Handy 14 Pixel auf. Jetzt bricht im Zweifel beides um. */
+  .vergleich .was { font-weight: 500; min-width: 0; overflow-wrap: anywhere; }
+  .vergleich .was small { display: block; color: var(--tinte-fern); font-size: 12.5px; }
+  .vergleich .hennis {
+    font-family: "Archivo Black", sans-serif; color: var(--band-tief);
+    font-variant-numeric: tabular-nums; font-size: 17px;
+    min-width: 0; text-align: right; overflow-wrap: anywhere;
+  }
+  .vergleich.du { background: var(--band-hauch); border-radius: 10px; padding: 11px 13px; border-bottom: none; }
+  .vergleich.du .hennis { color: var(--tinte); }
+
+  .fuss {
+    margin-top: 40px; padding-top: 16px; border-top: 1px solid var(--linie);
+    font-size: 13px; color: var(--tinte-fern);
+  }
+</style>
+
+<style>
+  /* ── Umschalter Laenge / Flaeche / Raum ─────────────────────────────────── */
+  .modi {
+    display: flex; gap: 4px; background: var(--flaeche-leise); border-radius: 12px;
+    padding: 4px; margin-bottom: 14px;
+  }
+  .modi button {
+    flex: 1; font-family: "Archivo", sans-serif; font-size: 14.5px; font-weight: 700;
+    color: var(--tinte-fern); background: none; border: none; border-radius: 9px;
+    padding: 10px 4px; min-height: 44px; cursor: pointer; transition: background .12s, color .12s;
+  }
+  .modi button[aria-pressed="true"] { background: var(--band); color: #14151a; }
+  .modi button:not([aria-pressed="true"]):hover { color: var(--tinte); }
+
+  /* ── Teilen ─────────────────────────────────────────────────────────────── */
+  .teilen {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 16px;
+  }
+  .teilen button {
+    font-family: "Archivo", sans-serif; font-size: 15px; font-weight: 700;
+    color: #14151a; background: var(--band); border: none; border-radius: 99px;
+    padding: 0 20px; min-height: 46px; cursor: pointer; transition: filter .12s;
+  }
+  .teilen button:hover { filter: brightness(1.06); }
+  .teilen .rueckmeldung { font-size: 14px; color: #9a9da6; }
+
+  /* ── Vergleiche: Kopfzeile mit Wuerfel ──────────────────────────────────── */
+  .vkopf { display: flex; align-items: baseline; gap: 12px; margin-bottom: 16px; }
+  .vkopf .unter { margin: 0; flex: 1; }
+  .vkopf button {
+    font-family: "Archivo", sans-serif; font-size: 13.5px; font-weight: 700;
+    color: var(--tinte); background: var(--flaeche); border: 1px solid var(--linie);
+    border-radius: 99px; padding: 0 15px; min-height: 44px; cursor: pointer; white-space: nowrap;
+  }
+  .vkopf button:hover { border-color: var(--band); }
+  .vergleich.blinkt { animation: blinken 1.1s ease-out; }
+  @keyframes blinken {
+    0%, 100% { background: transparent; }
+    22% { background: var(--band-hauch); }
+  }
+  @media (prefers-reduced-motion: reduce) { .vergleich.blinkt { animation: none; } }
+
+  /* Bei Flaeche und Raum stehen die Figuren im Raster statt in der Reihe. */
+  .figuren.raster { max-width: 260px; }
+
+  /* ── Die Definition als Bild: Henni neben einer Skala ────────────────────
+     Ersetzt das rein dekorative Massband. Wer die Einheit verstehen will, sieht
+     hier, WORAN sie haengt — statt es nur zu lesen. 1 Pixel Hoehe = 1 cm. */
+  .definition {
+    display: flex; align-items: flex-end; gap: 18px;
+    background: var(--flaeche); border: 1px solid var(--linie); border-radius: 16px;
+    padding: 22px 22px 20px; margin: 26px 0 22px; box-shadow: var(--schatten);
+  }
+  .skala {
+    position: relative; width: 74px; height: 170px; flex: 0 0 auto;
+    border-left: 2px solid var(--tinte-fern);
+  }
+  .skala .strich {
+    position: absolute; left: 0; width: 100%; height: 0;
+    border-top: 1px solid var(--linie);
+  }
+  .skala .strich.gross { border-top-color: var(--tinte-fern); }
+  .skala .strich i {
+    position: absolute; left: 5px; top: -8px; font-size: 10.5px; font-style: normal;
+    font-weight: 600; color: var(--tinte-fern); white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .skala .strich.spitze { border-top: 2px solid var(--band-tief); }
+  .skala .strich.spitze i { color: var(--band-tief); font-weight: 700; }
+  .definition img { display: block; height: 170px; width: auto; flex: 0 0 auto; }
+  .definition .worte { flex: 1; min-width: 0; padding-bottom: 2px; }
+  .definition .worte b {
+    display: block; font-family: "Archivo Black", sans-serif; font-size: 21px;
+    color: var(--tinte); letter-spacing: -.01em; margin-bottom: 4px;
+  }
+  .definition .worte span { font-size: 14.5px; color: var(--tinte-fern); }
+  @media (max-width: 460px) {
+    .definition { gap: 12px; padding: 18px 16px 16px; }
+    .definition .worte { flex-basis: 100%; order: 3; padding-top: 6px; }
+    .definition .worte b { font-size: 18px; }
+  }
+
+  .einheit-erklaerung {
+    font-size: 14px; color: var(--tinte-fern); margin: 0 0 4px;
+  }
+</style>
+<style>
+  /* ── Umschalter Laenge / Flaeche / Raum ─────────────────────────────────── */
+  .modi {
+    display: flex; gap: 4px; background: var(--flaeche-leise); border-radius: 12px;
+    padding: 4px; margin-bottom: 14px;
+  }
+  .modi button {
+    flex: 1; font-family: "Archivo", sans-serif; font-size: 14.5px; font-weight: 700;
+    color: var(--tinte-fern); background: none; border: none; border-radius: 9px;
+    padding: 10px 4px; min-height: 44px; cursor: pointer; transition: background .12s, color .12s;
+  }
+  .modi button[aria-pressed="true"] { background: var(--band); color: #14151a; }
+  .modi button:not([aria-pressed="true"]):hover { color: var(--tinte); }
+
+  /* ── Teilen ─────────────────────────────────────────────────────────────── */
+  .teilen {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 16px;
+  }
+  .teilen button {
+    font-family: "Archivo", sans-serif; font-size: 15px; font-weight: 700;
+    color: #14151a; background: var(--band); border: none; border-radius: 99px;
+    padding: 0 20px; min-height: 46px; cursor: pointer; transition: filter .12s;
+  }
+  .teilen button:hover { filter: brightness(1.06); }
+  .teilen .rueckmeldung { font-size: 14px; color: #9a9da6; }
+
+  /* ── Vergleiche: Kopfzeile mit Wuerfel ──────────────────────────────────── */
+  .vkopf { display: flex; align-items: baseline; gap: 12px; margin-bottom: 16px; }
+  .vkopf .unter { margin: 0; flex: 1; }
+  .vkopf button {
+    font-family: "Archivo", sans-serif; font-size: 13.5px; font-weight: 700;
+    color: var(--tinte); background: var(--flaeche); border: 1px solid var(--linie);
+    border-radius: 99px; padding: 0 15px; min-height: 44px; cursor: pointer; white-space: nowrap;
+  }
+  .vkopf button:hover { border-color: var(--band); }
+  .vergleich.blinkt { animation: blinken 1.1s ease-out; }
+  @keyframes blinken {
+    0%, 100% { background: transparent; }
+    22% { background: var(--band-hauch); }
+  }
+  @media (prefers-reduced-motion: reduce) { .vergleich.blinkt { animation: none; } }
+
+  /* Bei Flaeche und Raum stehen die Figuren im Raster statt in der Reihe. */
+  .figuren.raster { max-width: 260px; }
+
+  /* ── Die Definition als Bild: Henni neben einer Skala ────────────────────
+     Ersetzt das rein dekorative Massband. Wer die Einheit verstehen will, sieht
+     hier, WORAN sie haengt — statt es nur zu lesen. 1 Pixel Hoehe = 1 cm. */
+  .definition {
+    display: flex; align-items: flex-end; gap: 18px;
+    background: var(--flaeche); border: 1px solid var(--linie); border-radius: 16px;
+    padding: 22px 22px 20px; margin: 26px 0 22px; box-shadow: var(--schatten);
+  }
+  .skala {
+    position: relative; width: 74px; height: 170px; flex: 0 0 auto;
+    border-left: 2px solid var(--tinte-fern);
+  }
+  .skala .strich {
+    position: absolute; left: 0; width: 100%; height: 0;
+    border-top: 1px solid var(--linie);
+  }
+  .skala .strich.gross { border-top-color: var(--tinte-fern); }
+  .skala .strich i {
+    position: absolute; left: 5px; top: -8px; font-size: 10.5px; font-style: normal;
+    font-weight: 600; color: var(--tinte-fern); white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .skala .strich.spitze { border-top: 2px solid var(--band-tief); }
+  .skala .strich.spitze i { color: var(--band-tief); font-weight: 700; }
+  .definition img { display: block; height: 170px; width: auto; flex: 0 0 auto; }
+  .definition .worte { flex: 1; min-width: 0; padding-bottom: 2px; }
+  .definition .worte b {
+    display: block; font-family: "Archivo Black", sans-serif; font-size: 21px;
+    color: var(--tinte); letter-spacing: -.01em; margin-bottom: 4px;
+  }
+  .definition .worte span { font-size: 14.5px; color: var(--tinte-fern); }
+  @media (max-width: 460px) {
+    .definition { gap: 12px; padding: 18px 16px 16px; }
+    .definition .worte { flex-basis: 100%; order: 3; padding-top: 6px; }
+    .definition .worte b { font-size: 18px; }
+  }
+
+  .einheit-erklaerung {
+    font-size: 14px; color: var(--tinte-fern); margin: 0 0 4px;
+  }
+</style>
+<style>
+  /* ── Umschalter Laenge / Flaeche / Raum ─────────────────────────────────── */
+  .modi {
+    display: flex; gap: 4px; background: var(--flaeche-leise); border-radius: 12px;
+    padding: 4px; margin-bottom: 14px;
+  }
+  .modi button {
+    flex: 1; font-family: "Archivo", sans-serif; font-size: 14.5px; font-weight: 700;
+    color: var(--tinte-fern); background: none; border: none; border-radius: 9px;
+    padding: 10px 4px; min-height: 44px; cursor: pointer; transition: background .12s, color .12s;
+  }
+  .modi button[aria-pressed="true"] { background: var(--band); color: #14151a; }
+  .modi button:not([aria-pressed="true"]):hover { color: var(--tinte); }
+
+  /* ── Teilen ─────────────────────────────────────────────────────────────── */
+  .teilen {
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 16px;
+  }
+  .teilen button {
+    font-family: "Archivo", sans-serif; font-size: 15px; font-weight: 700;
+    color: #14151a; background: var(--band); border: none; border-radius: 99px;
+    padding: 0 20px; min-height: 46px; cursor: pointer; transition: filter .12s;
+  }
+  .teilen button:hover { filter: brightness(1.06); }
+  .teilen .rueckmeldung { font-size: 14px; color: #9a9da6; }
+
+  /* ── Vergleiche: Kopfzeile mit Wuerfel ──────────────────────────────────── */
+  .vkopf { display: flex; align-items: baseline; gap: 12px; margin-bottom: 16px; }
+  .vkopf .unter { margin: 0; flex: 1; }
+  .vkopf button {
+    font-family: "Archivo", sans-serif; font-size: 13.5px; font-weight: 700;
+    color: var(--tinte); background: var(--flaeche); border: 1px solid var(--linie);
+    border-radius: 99px; padding: 0 15px; min-height: 44px; cursor: pointer; white-space: nowrap;
+  }
+  .vkopf button:hover { border-color: var(--band); }
+  .vergleich.blinkt { animation: blinken 1.1s ease-out; }
+  @keyframes blinken {
+    0%, 100% { background: transparent; }
+    22% { background: var(--band-hauch); }
+  }
+  @media (prefers-reduced-motion: reduce) { .vergleich.blinkt { animation: none; } }
+
+  /* Bei Flaeche und Raum stehen die Figuren im RASTER statt in einer Reihe — eine Reihe
+     liest sich als Strecke, und darum geht es dort gerade nicht. Vier je Zeile, damit die
+     Anordnung auch bei wenigen Figuren als Flaeche erkennbar bleibt. */
+  .figuren.raster {
+    display: grid; justify-content: start; align-items: end; gap: 6px 8px;
+  }
+
+  /* ── Die Definition als Bild: Henni neben einer Skala ────────────────────
+     Ersetzt das rein dekorative Massband. Wer die Einheit verstehen will, sieht
+     hier, WORAN sie haengt — statt es nur zu lesen. 1 Pixel Hoehe = 1 cm. */
+  .definition {
+    display: flex; align-items: flex-end; gap: 18px;
+    background: var(--flaeche); border: 1px solid var(--linie); border-radius: 16px;
+    padding: 22px 22px 20px; margin: 26px 0 22px; box-shadow: var(--schatten);
+  }
+  .skala {
+    position: relative; width: 74px; height: 170px; flex: 0 0 auto;
+    border-left: 2px solid var(--tinte-fern);
+  }
+  .skala .strich {
+    position: absolute; left: 0; width: 100%; height: 0;
+    border-top: 1px solid var(--linie);
+  }
+  .skala .strich.gross { border-top-color: var(--tinte-fern); }
+  .skala .strich i {
+    position: absolute; left: 5px; top: -8px; font-size: 10.5px; font-style: normal;
+    font-weight: 600; color: var(--tinte-fern); white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+  .skala .strich.spitze { border-top: 2px solid var(--band-tief); }
+  .skala .strich.spitze i { color: var(--band-tief); font-weight: 700; }
+  .definition img { display: block; height: 170px; width: auto; flex: 0 0 auto; }
+  .definition .worte { flex: 1; min-width: 0; padding-bottom: 2px; }
+  .definition .worte b {
+    display: block; font-family: "Archivo Black", sans-serif; font-size: 21px;
+    color: var(--tinte); letter-spacing: -.01em; margin-bottom: 4px;
+  }
+  .definition .worte span { font-size: 14.5px; color: var(--tinte-fern); }
+  @media (max-width: 460px) {
+    .definition { gap: 12px; padding: 18px 16px 16px; }
+    .definition .worte { flex-basis: 100%; order: 3; padding-top: 6px; }
+    .definition .worte b { font-size: 18px; }
+  }
+
+  .einheit-erklaerung {
+    font-size: 14px; color: var(--tinte-fern); margin: 0 0 4px;
+  }
+</style>
+<div class="bogen">
+  <p class="marke">L&auml;ngen, Fl&auml;chen und R&auml;ume in Henni</p>
+  <h1>Henni-<wbr>Rechner</h1>
+  <p class="satz">
+    Die Einheit <strong>Henni</strong> ist &uuml;ber Hennis K&ouml;rperh&ouml;he definiert:
+    <strong>1&nbsp;Henni = 1,70&nbsp;m</strong>. Daraus leiten sich Fl&auml;che und Raum ab.
+  </p>
+
+  <div class="definition">
+    <div class="skala" aria-hidden="true">
+      <span class="strich spitze" style="bottom:100%"><i>1,70 m</i></span>
+      <span class="strich gross" style="bottom:88.24%"><i>1,50 m</i></span>
+      <span class="strich" style="bottom:73.53%"></span>
+      <span class="strich gross" style="bottom:58.82%"><i>1,00 m</i></span>
+      <span class="strich" style="bottom:44.12%"></span>
+      <span class="strich gross" style="bottom:29.41%"><i>0,50 m</i></span>
+      <span class="strich" style="bottom:14.71%"></span>
+      <span class="strich gross" style="bottom:0"><i>0</i></span>
+    </div>
+    <img id="heldenbild" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAD0AAAC+CAYAAACGRgefAABRm0lEQVR42tW9ebymV1Xn+917P9M7n/dMNVdqTlJJgEAIYyAgKIrTRauc527wYmu3125bb2tXqr122y3qbbEdUKRFBakSUUGZBBICJCQhcxVJJZUaT515eIdn3sP943nPScW2VTJAbn0+51PJqXPe913P3nut3/qt31pb8Cz/cc5JIYT9+9//83f88lXdK8bG46JwccLa9/zLn34EcFJKfvEXf1EePXrU8lX6I55dg49IIY7av3jH/3Xgha97w6uRRYd8db/I813jWzbdWN800coHfe3yIu+n+q477zz3n7/zX/y7z/5jD+t5bfT6hz75yff+YDice8e2q3dOeVGAKvvoLKXf6xMPY1qT0zSnp/CCGr3EuqWzs5+8447zP/0D/+G/nHTumBLisPn/hdHrBn/yPb/y5uuv2fmR/iAnyhb1iXtPCn+szXU3HkSFyDwX2OEqxSChTEvb2taV09Pj4vy53txnH157+w/8zC996Kux4uJZMFjALeL++7+9vbW+et/MF27f9egjj5te0lP92FJr1RjGA+bnFziweyevfPF+dFJyzwOPsWXzBPuv2GR836nxXbvMXScu/uw3/viv/LpzTgghANxzYbT3bDw4IY7auz5x7dujXeO7cj8wZ2YW1AOnL5EkOTu3TWJlyL33XeTzdz/Bbbffz/d+++tZSUuGZ+dI4kQJW9oXFLl85VX7fu2OP/nPE0KIX3BHjghx9OhzYrR6Rqt85IgUr3udPXHHn+8PyvSPjr3nWPCJv/usjOqB6HTGOHtxDodjfKyDUmBxLK0N6A9TfF+ipCDJCy4trggpI7dtqiWKonjp6fPxH/3g+9/fO3LkiLztttuedcPlM/rtW24RAG3f+w6TDjtf+NJJd+cDp8Tn73mEhx95DGsdTgjSNGF8YgLP8xgMUwyS6669htmlVTw/Is1y4ryQi6uxXZxbjg5/48v/z+fyTD9tox0IKaX5dz/6oy1n9Q986C8/7s7OXBIiDLi0POTMzAqrq32Ga2tM1nxsEpMOE7aOd9i3Y4oz5y5y+swFVldW2DI5xp5d2xjbtoPllZgt3fBHfuy7v2XT0aNHrXPPblh9Rmf6+LFD0h0+bl50cMsLl+aXD8wu9BjGqRBKsm28w1U7NnPljml2jrfQJuNSJNha28V4p8Wg12ehFzPZ7CCKkq3jkziT4tU90ZjouM1bp8ff8Prpl777zz78EXAChHteGH3o0DEHghuuOfC9D5141Hvi3JzpdppqsjPGN736pexsK0JXUhQ5DslUI2K6WWdyYoLBMGHXFsvqYMDebdNsnm5zcWWNz332S+KxJ+bN/muvDl5xcMfrgY882wDqmXnvW24B4OLFS8Ftt9/Lwsoam8YbvPGm13DF1glUPg8FCCSeBN9T1Gp1xrvjjI+NsTbsYU1Ct92g22oysB4fu/8kK4sDhsOYVn+5Mvb48efPmT5+8qQAuDi3evulxSUKXUqlfBr1EF2kCOuQSuAHEikdURjSbjTIh30wmq1btrF7125W+n2yQiMQLK2k7tLyilqJjXnszMr7AG45ccI9b1b6xMGDDuD87NKt52fn+tqYtrHOpYM1of0mQVSn4cHaygpYx0S3S80PCDyPeqtNa9Mmao06vXqEMQYPw9rKQDxxdt4trQzE6775m0KAa6655vmzvY+OgMM3/ujLLv313378PKhra0HoIt8TpRWcml9hdm6WteU1dm+a5vrWOEaX5Cbj1KNneGJ2CW1Krtm/k26zyWR3gk6jQX84tHPzCypPiyuAzx069PxCZA5QN9zwtvI11131+bU0uXbT+Jhb7fd57OwTDOKEZBgjpOLLs4s8sbSC5wUMsgRtBHmaUvMcs5dWyKYk98/0kY0x/CjkzOknOHfy4Qjg1ltOiOcVOFlfhEwndzcCH2cc5y/NMdFps2t6E81ak2yYEGcZS/2Y3Vs2Ibw6eZKSDocsrQ45dW6W3uIiW9s1XrxvO1HUYmF2nrXlpQmAW59P4ATg+CghEEbdXZZGF0Wuup2OcwYeP3uBLz5+lrOLPWbnlvCd4XUvupr9V+zk9Ow8q5lmZpChogZJacjykrbvmBzriJnZFR5++JEVgGtOnnTPt4TDAbzp5jc+/j/f90eXJjqNnd120w0HAzHRaXFjVGctHqA8wa6pDru7Na7ftYnHX3QdDSkZiwJe9aL9eFHEqTMzHLxiB3t2bBYzCys4E82NHizPR6PFf/r9309euGni9Kaxzs7NYx23JBzjrTrpcMjYxB7OXrrE9Vdsodcbcs3WCR6Z7DK9bTO7tkyhdcaps+e48eqdND3HtomOeWWz5e2rN14CfOTtBw+K48/H1BJwV27flhdZRqvmI0SHfq+HUYr58+fwdUEgBHfc9yCtZo29Ux3uuu8+0pXt1Nodrt+3h24oWI5TpjoNgjOLpOcWDgAsPg+3N4AF2LdpUyeUijQZiolmk6nGNPPzC5g0Jqx3+Oy9J6g3Qy7OLLH/iq3UA8VwbYWxZoArE1a1YjGXbO90xM6ruiwsD8YBThw//jxLLdeX2Tmm2m3X9H2KsnRZ3Ccd9Al9ydhYC78R8sTqKl88PcNDCwsMPHjpK24kakQYq1nu9VkYZpRWsbbad4889riznegEwM1HXiufdyv9H0EeBdtfXOr7QrugOU2hfISD/jBmbm2VtTRDhT6+lbzowJUEQcD5+VkIAgbDIaUuqbfBhJ7bs2VS1DuT4ok8+Vi1vaeff9v7mkOHBMePEzQa94+3wjcVpbE6UMqTkl6ScmZ2kcmwyd6gRdAIiYKAbCnjzvMnCGqSV163D4FDSEGAFtOdlrqUDD7w3fPDz4y4MvO8M3odg7e3Tv9+qMTbnY7b2mrr+74Mg4Dp9hg1PLqtFp16RKtTB9+jvbxEoocEUYjAuShQInVq4bNfPvcvfrx/7G85jmHEDj5feW8BuF//8e+7ySuLX52u8zKkcDovhdWGRq3BzOw8Zy5dQnmO/bu3s3/XLtbiIU5YQt837WZLLRbRh7/jlv/+raMVfk5IwWfFka3H60OHDqn/63f/9PYT/eQ7EsOSLwVaWJdqQ1bG1BshtXqdZr3FlqlN4DROgPIkpkxdogWx9R86duiQetfb3ubB85Aj+18g6fHj5vfe+lb/947/zcxqXnzAIEU/LeyJ+XnW8pLOWJMDu7Zy/dV7mZzqkkqPR+ZXeGR2hflEy0tDSyLC2w8fP266b1h9Tsn+Z/WJXtqyxTgQt5Teu04vrP5YXpThyjB3959dEJPNAZOtGgvDhC+cvsBSUrKWpoS+5zaP1+XObRPLW/fvuquioo7b/98U8ACOjELY//1db/jQWr//7U9cXDZJkSsfQasWEPg+K4OYJC8JI5/NU2374r075P7dB+/+tl/8tZcdP35YwiEOHTpkn6tz/awHfl77Wnns2DG1bXzi1k2dMQpdkGcpg3hIL0mJsxxjLWOtOtvHm+zfNOau6DapkRohhDt8+Lg5fPiwEUK4I0eOPOXzHTt2TDl3TD2vtjfA+AteoA4fPpz/zo++pXf19BTpgZQ7H3mCPMuRUiKkpNtu4YuSHRNtOkEkm55EiWL7J7/4Nwdec+MBf2lxZvzh208++g3f8faFY8eOqUOHTji4hfWY/Uy9+3MSBxcXv/ySv/v9d/9aceb0a6219uzyQD4+c4k4y1BSMt5qMNmJ6NQj2lHENVdspj4eEt6wf3ji5CPBjj07gh37rz1//z2XvuXbDv2bB9df987b3vPmdqcTHnzRW/7imRj+rNangWDp0p0/987f/sOfvXDXfbWbduxwuiyFc4ZCGwZpSqkNUjiEtDgH+7dtZctUi0Bpgp1TfPaBh1hbWzI//l//ver13ONpP/phJV2+fWfw9qDufuTSTF9/6m9PHXz7T//yY9b+RynEV65geJbq0/f4QtxQxv1PveX++x774L/5qf/qtorAfcsLrpSlKTDa4XBoY8iKAussRZnTqjfZs2Mznbok9C3bdm927Vd9HZ/70hfFpf6cffM3vVZ2WpHt9WMRRkqcPztrOt0JJW37r/ddeej/cM7xdGrZ8tkpyN9Q3veZD409/OCZn3zfn37IJElq8jyTeaFxelSUcWCsw2iLLi3OQrNRo9SGOLc4FLo/FI88dEJ84f5H2bp1u6zVrJ2bn5HnLiyKi7NDs2XnDrnzimmzc2/0rffd/f63A+6ee37P56tVqnUOcfPNn/F2795tHnv4C/sO3hB+cNsVm17958dvZW21p9bimMl6nVYUYI3DOkea5QzTlLwoCIKAsXYT4RTCOtqdBg/3hvzeRz7FsB+za0eTg9fuE41W3TVqNVYX+/LE/Y+IO+94kMXFlCiaOLB9x3W/+a53fcQ65xQg/rllXe8rrVQeP3ZMHjp0yEkhrON1+m+OvfO67qbhJ3uDYtOdX3jQ1Gs1ZYylkJJPnXmCr9u9m+2dFnlRkOqSwjgUHmONFkHg09c5jw8KPj9c4mxvFb8WUeYl7/nDj/LlR+c4f35B3HvfKeYvpaDhyqt2yP9w5CeckOWevzz2G//pb9/7hT8QQpxfD2mHD//TmhXxz5dYHJeXi2B+9Vc/3vjub9n8mpm5c7/0m+98x0vmZmd1XjivVg8YxjF5VjJMczoq4HW7r2C60WC1P0CXhqAe0JrsMJCaR5fXWCuKatvnJckwpjfM6fdi5pcTALrtBvv2bmFsPOTnfuH7eP3NL2YQD/FkjYvnenP33nXuz//ot/7inR+9++5T/xzNivcV6MIMOPnxv/rAK7btqv9Ie6y8KYhmDrzsyq1s+vPN9uOf+IK3ecs4q2uOej0kCEPG/ZAkz/jYE09woDvBvokJsqhk1uYsXbrI0lqfotTo3DEYZvT7CWVpAEezVeO6g9sZn2zRbTdJ05RX3fQiXv3qq1lencMYi+/n9or99c37rnrpv9p5xfh3vfrjr/55IcS7/6lw5v3TujBhj/3+sfFNe/X3bN70l9/T7nqv6oxrfN/R7/WcsbG7+Q0H5Sc/dTvtZp3BYMhgkAIZUeTjCYHXjLjkcmbOn2FQGuI0p98bUhQaYxwWaDbr7Ng+SafTIIxCmq0aUjnAI0lias2IH/yRr2cw6DMzO0+jHjI2NiYf+fITLqpF5uWv3T2lgsYfbN/+jl2e5/3ikSNH/reCvP+tIzty5Ih83euO2k/89bHX7r02+uA1L+z+0OYtamdQK8jToRkOB3ieL4VA7Ny5lRMPzrC8tILnKXxPkRcp7WYDrTXTm8bZvGmCXqY5dWqGpdWkcmTdNpu3THLVVTs4eNV2Nm8Zo9WqU6v7KCUQQlDmKWWp+cmf/g4OHJjgkVNnyIqCsU6bXj/nQ39+u+h2urLWqtkSbS88sXzzG296xUM/+4u/dPLYsWPq+D9ALHr/2Jb+9IeOvWTfdWMf3rGr1homl/Rav5Q4hDZOJUmG1gZra4x3O7ziFdeytLjMYDCk1xuglERKQbPZwPclhS7Ysb3LePc6+v2EsU6Dej1EeWCMxRiL1hopPcDhKUWe50xtGud7fuDNvOLVu5mdmcEPAuphQJoXXLyY8eD9s1xxxSLb9+6QX/rS46Y3XLXbpq79f/79W9/6qUOHDvXXCY5/Tpx2xw4dUsN8+b81W2Xr5Je/rPv93PN8JQdxLJaXV4lqdcIwxPMkc/Pz3Pul++mMtWi1GyipCIOIPC8JQx/fkyglsdbSaoXs3DlJre5hbElRFFhrkBKkFOAMSkFR5rziVS/mv/zav+I1rzvAcDDEDyKazRp5WjIYGFbWUtLMsDA3YGUx58zpeTW/sOSSfHj16XNn3i6EcIcOHZL/JDg5duyYEkI4/XXXv3Hn/onXv+fdHzYf/LN7vMX5AQiJtY6yNKRJ5VlbzQ5f/MIp5uYGWGvQpcE6i1KSzlgTz5M4V6ETKSXOgdYlUgo8T6GUqhKRER0mpEAID8+TvP7rr6TZ0CzOzaF1gacEnu+TJJbTp2YxxlAWKUbD5z/zAMP+gNOnz4v3/vF73aOPnPqRLxz7tdrx48ft349S/8v2PjGq/O/Ys/vHlpaX+fMPfBTfD/CDjB/d9g30+zHNZp3xTgvf91he6fN3n3wAazVZmqF1ydhYi3anQbvVoLfWRxuDL+RTeD4pq+dtrUUgcDgQrlptUSG23lqPOBkjThOsgzCIkCJgcWGNM48tkOWGuJ9y5vQsY2NjjI21uX91TTZbHbf/FVftv+WX//DlwGcOHTqkjh8/bv7BlV73ePd95o5daam/4Xff+ccMBkOZJTlLC2vMLyxT5hD6QaUe8ALuv+88l2aWGJ9s0+40mZwaY9v2SdrtOsZavMBDKrnuK7BW45wbrT4IIXE4hGBjxYUAhCDPBCvLA/Jc02i2ifOSlbWYsU6H5aUBD973GGWuueNz96J1yeL8CmWpKW1uz5w/x2qav2VEZf2j21sCXJh98FtPnXq09fDDJ02jUReltmzaspXZmZgsKwjDkLwoibOckw+dY7zbZqzTpF4P8HyJMQZjDFJKgiBACIG1lWFKqo0HIIRAyGpLO0ApNfpZi6ckQngY5zG30OcLn3sQo6HVaTA7s8D5M/OUWUma5iyvrDGMh8zPz1GLInRZiJn5WZI8+/rPvOdIVGGMJ7e4/IfqUrfdeuvrv3zihCvLAucEtXrA8nLMh//yNnbv2gnA2lrCIydnOXdmFs+T5FmBsyCoQo2xllKX+F5IEESkaUKW52RFRpqlDOMYgUBJiRDg+wrn7Gi7V+42LXKCIGKsM02e+jx873mW5laZ2NRFeAKtNf1Bwp69e8iyHKsNSnoolBjrtCkNu3/5t/5s/99Hn5efaTEK5jUvDK5ZPDcjjLGiLEsa9QjfE7z1bYfodAMuXJghTTRPPDbLYBAThiHGGKD60NYaojDixde/mhde9yK+cOdnMVqTJBnGagSWyfFxup0xtKtWejBc5a577sQ5h5QKnEMqyerygJmZAUuLfe65436+/s2v4Du+7xt59OQCn/jwZ9Hact11V3NpbobI9xBSYJwVQaiMEMpfXc6vBx56LcjbRosqLzvPAuBl11yzyw/93fOL8zgrBAjSNOPN3/ISrrp2guWVJTqdDoNBQm+1P9qOZnQWxejcWqRUNOoNtMlZXp4DV+J7kkajTnesQy30+OznP80Xv/hZPv/5W7n77i9ira1SUOOQEtqtFoVVrKz0OHXiceZmV/jAn3yc2z/1JfZftQvl+wipuHjhAkk/xVPexnpKad3k9BhpWV4DcNs/5L1PjnRhO7dNbG+1GmowGFjrkEaXxFnJqUfOsPtACyV9gsBjy9bN3HvPE0gpq1TRDzFGY4xBCEmSxHzi7/4SrCPPC+J4iBAecoS0PKVgJKpT3pPfxwmEg7K0lGWGH9aYm1ll2M+pRXXWegN+6x3v4+U3vZggjPCUz/LSCkGosM6OYIhDKilWe2uMT3SvFJcu4Zyz/8uZXhfNvPDF14ylWcJYu+Pq9Rp5UWAspKnDIbDOsrY6YDjMMEZgrEN5HtoY3CgUPemkBAiB7wfU6y1qtYhmo0mr2UJ5HoHvoZRX7Q7ncBacdSCq1e6v9tm1a4JdezbhRwochIFHb63Pl+54AJzDUw5jLJ63/joWYxzGaDEx1mXfnj0ves3VVzdH/ko8xegTBw8KgG1bJrctLy0hJES1iKI0OGGZ2jSBcYpHHpnh4oUeaZIzGCRYa/F9r3JexoBz4BxGa6ypzre1dgMJOufQWldnfxS6rLVYbTHaUBQleVFSFCWPfnmWOC54+U3XsXnL5CiOg6d8kqRgYWGJYRxvZPvGlBhrcM7h+UKUZczcwuLWVqez/XJntmH0Nddc4wCSorxutbeK7ws3HCYUeYkUghMPniIelIR1n+5UjWYrwhiNVJU91hryPK8MGnlhow2VvW4jBlcxmuohlRZdGpytVtZojdEGUzqssXzxCyf4nf/3r7jr8yfpdicQ0uGsI0kyysIwN7tMv5fQ7w0RQmIduNEDVp4n8IQdJqnf7nSuqyonh55q9OHDh61zThhjrlteXsY6ZJ5nOCdRns/7//ij/OavHidLBPWahxM5ZakpcsPq6hprqz2KrKAs9ciQJ7ergw1HVzkZMdoFDq0r6GpKgzUOZwW61OAcRV7yxdvv512/+Wc8cuJRoiiiLC1pmpPnBWmisQ6KosAYS1maKnExJdZYxsbadqzdJo4HVwEsLCyIDUd2WdK9OUn7B4qi2PDcDkteJrRaLU48+DhxnLBnz2YmJ5v0VoYsLazgnMX3/QpCjgy0ApyzG3Bz/ftKqdF2ryDo+vmvzrLEOYNzIKXC9z38QNFbTbgUzDE5MYlSkrIwaO0wxqEtoxWuwM/6Vi/LnFrNF8oTCC0PAtx88832tttuq4w+fvy4BMxdn/mTax47fbrjHM4YI6SUlIWmyEG2JEHgcf7sLAuzq1x73QGyVJPlOb7ycF5l5AhdPiWEVR9GPMVQKSVam9F2t1gLxuiNcy+lIQxD6o2IXm9APMyZmHTUG7Xq96xhdHLwlMI5R1GUG4Zb6xBKsLS0zHi9vWe0sE/G6RMnKv3lyUeeuObipQXiQWKSJENJhbYGrTVxnJEmJYGn2Lx5gt379rC8vAra4qxF6xJr3YZR64Y7VyUSFZ4G68wGzl7/EqL6qj54UW15rSl1SaNRQwhFr5cxHMS0Oy380B/xyus7a/29wBiz4TcA2ek06XbHr3jbt3zLxPqGk1WMrhS999z/pSvjwaDirUqDPwr+aZ6T5yVpnKNLR6vZ4qEHTtLv9ZFCYLTBGYs1BjEydn2bVQ/XISRIOXrH0UN4qvFi9LdC6+psFkWO73vU61GFsZf6KCUZH+9UoW59A4lqBxljNo6OMQZTFpQ2px8Ppwqtd4+cmRxtb6wQkrNPnN+XxDG6dMLzfQRVgpAVOYM4ptmsYYzh3nsfBhxhEGBslVggqqRBjLz0OioTUnG5cmQ94bBYhIR1yLB+3t0IkVXhD6zVdDpN5maXiOOEPCtod5oM+jEO8D2J51Xxfv1IrfsRY4zwo9DWVChXhvH05eBEAO53f/d3fK3NrjCK0KUWlRMCTwmkkKR5SVZolFJorUcr6ioSQCkQTyJ6txGi5Gi1xVMMk1KilCIMg9EKi43vKaVQUmJdlVMXRUl7rIXvK/K8pN8fUqsFSFVlc0pU6UmpS7TWT3kfgaQsc5dmGTt2bt8CcHBhQWy41lvf966OlGLcISkKLZwFqSS+56GExGhHlmZIqXCWjfMrpVzfYQjBRq68/rV+rp8ap6vv+76P8uRTiA3P8/CDAIHAOsizgigKCCMfYyyDfh8/ULSaDbKsQCk5grJVtnZ5Wiuqh+kuLFwiHQx2rkup5ZEj1TuGYb3me6purSVJKgZSAFKAdRbtoD9MccbheRKQWMuG01p/EOuIrEJcZsPAJ0kE+xRntw5bq3y7IhCCwNvg1NI0BwzNZh2tq/83ZYnn+xSFxvMqdCRYfw+LEILAD/C9gDCIcEhm5hf2AkxP3+YkHKl+uO5NC6kirQ3aGpIkBQRKSdzoZfNCs9YbEEU+4J4CLytj3FMoIecqXOyswzoz+qo+VFEU5HlVqK/OpHwKc6K8avvqwpDGGa12AykFRaEpsrJ63XWnKQTWPBnfhRRoUy1a4PtyamKCXjI88Hu/91b/+HGMvPXWWyVAYYtrAJkmmRHKE+v4V47OmXNVwjG/2EcIRS0KCEO/Wt2nIC638UFwEoHCOYE11W6oqpYV9CzyKkqs/97lYc5THlARBVlWEEUV86q1ochLCl1VQrzKh45YlxHvZixaG8qiREgn+sM+ptR7Fx7QW58CQ1fXkh3OWbQ2DirmI81ycBD4HgJBUTqWVlN0ub6NKufj+/7IcVx2Zp0D92TCYYxBj7B2WeqNh1UUGq31BmN6OXGolMIYS5ZmeL5PEIWU2hKn+cbvO+cq6Ks1RZGPXttiTRXnyzIXjWaElLL72BOPXfkUo33ft7os8YNg5BEhTTPStEAIh6cEFkdalJTajpxGFW/KsqzOKW7Dwa1/GV19oCr5qPLd9RVfx+Z69N/GmI0MrAoH1UPMsgznHO1OG98PyAuNBJSUThuL1o48yytuzVNV+EJQliXDfoxUxuQWHjt7af9TSIRutzG3tJwS+YGoRSH9QYy1lfPyI0XgCYyV5LZ6EykVRalHeNttPL/LndT6iknnRrm9eAoc3SDmrMWKijYy2mGMRkhVVTkE5EX10Bq1ECUFRZ7hrCEKlBCjh+gHAVEtxDlGxKLCUxUT2+sn6ELjtxubn7LSxrKpKEqkdDTqNTxPYanUA1miK2e2Di+lqGLzhpFUW9S6Dax9uUOzdh0Wir/3fbvh0ctSUxblqNohcKMj4RyUpSZNU3xfEfgeUngYrWk1wgWE09YatLYUeYGzhjAIaDZr1Oo+URSgRMDCygrLvbVpIQTq3Llz9k2vftFUmqZ/oK3uIMBihAOyTFOUlsKAtlV1ESfYs3OKMJBoW/Hn66ACBMrzEKiRgXKUO6/jazFKLp7q/NYR3PpxqTI2MNqQpDkgCAKPWi1idbWPdQJPSTypPpgk6ZXWGH9trcegXyE2rUuMrl4rikLAdxdnFuV4p/XE/MracQ9gcXZlx9bdm3YEkUIIIbUuCXyPei0kK1OscWAcCIFEICXUaiGl1huOYz0eS7sedio8ffl2r/4WGyDm8i3ueR5SWoqyQGtNEAT4fvUghFCUujpKYRiQJiVlWRolmDUgQylotlqMdceIogDfr0JgkZekXkqzNSbCKGRsrL3dGFOB1E67raXA5Xm+gW+dtfi+pBEpvCfx5WUg/0mca8xGVoPb8MDuKcTB3wcll39//VgopYjC2ogI0NTqdRCQ55VXNtYRhEGlUspy0qxolsZKYyy9XsLK8mpVQcHinMXzK7+T5TFbpsYpsnz8gQc+UfMA9l+5/cDM4pxYW+tZHNL3fRxVch5qRVQ6hpnZMGb9gxpjN1azGBHz0oIT1a5YT0Y8qTDWbhCHAJ7yKnztzAaSwlUxNowqGCqFIIpCVpbXKIsQZyz1esSiXSPLnczTsisQKF/QarbodJo454jCqEJ1nkJISZblwpiC6a17p//k3R/Z7AGcvXDu243VNJpNZ7QmSyqkJJVACkUQGFQB2oB1bgNeVgyFRmtLFIXs2r2DtdU1irLEU6r68EKQ5zmuqGJzWZTkeV61L/gBQeDhB1WVEisoS02v3yfww9H2lwg8ytyQJin1ikl1w+FQhL6a9bXqR7XGZK0euTzPBCLAYchLg050BViUFCCZnZttS9/skICQvn91s9MGhyjLEiEFjXqNRqNGGAYoTxEGFca9bv8eF3kepa7AfsVNacYnuhRFRpYnaF1grKYoCsqyHCUBGmerrCjwfZw2FHlOkZXkaUGelZRa4wcerVaLrMgpy4Io8Edw1pDEGVI4ojCwRVGC47QS8v40y1hb6zljKhhalnp0PD2iWlSpHjpjdFotVSTZuAQoizJTyieKQtdqtQijgDTLGPQSsqwYBf0Khw8Ga0IogRMCz/MQQlKrRURhwGAwRMon6eD1Lzci4LUxGxTResir6tEVvNRGY4Wl3gzxPI8kTUe4XKGNoSgKHI5Go442ljwvliM/uNVWqMwOh0PiOCFNctK0wFoIg5DQD4jjgWu12pTatDzAbZnefN/acPWVvV4fKaA/HJIkKcbIKn6WmtJUKKq0Gm0sNSnRtjrTjUaDOI7RukQpD2OejMMVnJQ45wEGZ0UFPjbCVPXDfqDwPR9nq9Wq1ULiYY4XQr0RkcYZxoAuNVEUIpwgiGq90jglHIx1W4yPjzE+3sX3PPIyI8sSkmRIVKvTbNWdk4iFlbWu92033bRjeWXlG1b7KyivSkpbzRZRVCNJshHHBUVShYzJ8RZalwjq6LLA932iKCSOB0S18Ckee535XPfySjmMtZczGxtevaKOFL5SKCWp12soNaTICxqNiLgfV7i90ARhKHzPI1IwvzLcO9YOASHyPKPX6+F5gqgW0G63cRbKvKS3NkCJiHanPS7nFs+/1Em3b2x8zDUadeH7HlK6UVFO4ns+ylMoD7pjDRqNgKI0FEUVn+v1Gsaaqh4lJb7vEwTBBgQNguBJRkRVdavLaR2tq/pXWWp0oTG6is1hFFCrBRhjicKARqOGw5GlOZ6nXFiLsEJ1tLWdotT01vqUZfV5Gq06SnnEcYrDYK1AKZ8gkIw1o6bEqgUlfDMxPi48P6QoNcNBuoFsnDOV8wPqUYiUbJRtlFJ4nkeWppcxonaDEqrUQpIoqpyJ53kEQUAQBJet8JPbvAI7JXmWEwQe9UaEoKqeNFp1rKMiDUtNEPiEvu81a/5a6Hl4XpXpra31WVvtk+eVeCAMfYSQrKwNmJufp9NpR/Lg9IFHlxfW5hbnF1ECN9mdoF6v4/sBtSikVouqkolxtJohCIdzBusctVqNyttDrR6hlLexcuuMSEXpVsaHYYjnV7SO53kjFCZRyoORz3CuKgpqXdLuNFCewpQltXpEEAbraiShPInwxHwgudvYqgwUBB7tToN6LRoxLxrPq8RB3fYUnucjfNWW7/ncxxZ37tp2Yev2bTihbJoXhLWKa04TQ5Jq8sJRaoGvFBKqc6nkBklYr9eo1+vUajV838dau2HoBh074qOlFPiBNyIFRpVGUwEeM0o6nHEkSUqjUaPZapAXVa4cRR5FUeKcc7Uo4vyFS/VtW6ZvFRWMlVJKVxZlJb5NMobDlCQvMc6ya/cUL7n+BrIhgQdw7sy5ePsVm/E9ycLcMnGSYEw1mKUeeQgMaVKhJqUqZOSsJU3TDbFMlmUbq1sl/1WI8X0fz/Oe8iDWy7i+72OsRY8kIc7aij+3DmuqbT21aYylxRWyJKPRapDEOUmaM9ZucN7J+v2Pz57Y2qmdabSi3WPduo2iUAgpca7Kp2tRnU4rZObCggtkiClF4VVUdfRzaVJ86sLMhZa11k1vmhZplpFnBUmakpcZ2liS3LLJqxgSqy1pkVRnWkr8wEOpqkTjeR5RFJHn+YbxnudV0NSZKgOyI6pWSpysfs9YKAuNSguUF5AXJfV6SKMZsbzYJ4pCOp0Wg+FQbNuyhQNX7lx1ub5WRN7Ett1bne85MRzE5Lmj2axhjeHRE4/hK8HiSs5CI0c5m0rA/dj3fHMiPCf2H9zHq29+BXsP7GLTlkkKU6K1I/B8okjR68cI6RGGPmVRUuQl1jjyPKfIC4w2o+1cJRZVOIsIw7CilUbpYTAqElSO8jK2lKoUW+RF5UiLqsoyvWkK6yyrK73KsSrljDZs2bKVmdnFlxdF1l6eX7TxIBVj3TEcggvnZvGU5Mqr9rM20JSlz6OnTzO7tLCqvuebXzv5+bvv/0i7U9+RDIbu7BPnZL8/YHKyixCSxYUVnBPESc5Ya6y4Zv8VWZzGwTr5FgQBztrqIWQ52qwDDndZ1WJdMVihOm8knSqNpiyq4r247Oyvp6ZCQhhFRLWIXm9IHGfooqDRaDillNw01vnY4+dmv6SNfWscp2o4jPE8Ka68ejdhvcHjj59lYqJBozXG2XOLlGUhdm3Z+mHZX4xfOb80vPaztz/ozp+bldt37GTb1s1kcUbgeTTqEXGSU5aO1dW+WukNlVQeUinKshyRwxXh73mqgn1hhFTrdamKI1NK4gc+UiqUp4hqEWEQEAQ+QspRBdJWO8BqnLEkccZwMCQI/GoRHKRZRjxMnBKSJEl2X+qlDydJtrJ56yaxb/9eNz+3xl133k8QWF7x6peiUXQ7Hdrtjui0O3i+fEJOT02u1KNmGdSavOyVL6PVaZBmGQtLK8wuLBBGPpNTbeoNj16Sqs/f9VCkZEWuKyXp9/sbQAYEdlTMk0KhR6WWdTLfjUJLWWq0KSuZtJIESuJs5cyUVE8ypsYSDxOsMUxvmmBicpwobFRhy2l66XCPtZY812mSJIyNN3jpy17AgQP7kULRX11DWiiyzNV9T4SeN7zu2qse8v7wwx+9a//O7fcJwY1hoGx/kMhao8HOZo0iL1iYX2I4M4dSAt8T7Nu3Hc/3MaWj2WxSFAVpmm5oybK8wJOSoB6iRmLYDS0Ko+0+2uph6Fekp1diBcTDtKoxU/FinqfQuabX6zM+Oc70pnGEgHq9JsJaxPzc7A5ANhv1e2pB7YpHTjzhtm6foDs5zvylRc4+cYnHHpun1ek4YxEKHnrrzd9wWgohip07t9ySJLmbW1gW3fEWQRDy6CNnuOvuL3Pq9CILyynWCjaPt+LN0w3CMKBWq2+EIynlRl254rUyhmtDdGYQVuC0JU9ysjSrdCkj3tsCYRTQHmsxuWmciekJgqhWERjWVtWMPGfY6+OsYWy8QRhVO0gIyLM8AOwLr9tz9sDVV3DwBVeR5TmLC8vUGg0OXneQZneclUFq0zRj09TEx29429tKBagnzs889t9/7b++XCizPwoDk2W5bDRr7Ny1mc5Y2544NSsC5d+zfbr5O4srgzeGvrJVMwsbicWGqhcHDnzPw1hHnmVYU2lLyrLEjFS/l5P1laOzeEogEORZiQOCwK+4rqLE8z3GxjvEwxjfD5xUUvZX+w++5eternvD4c8ur642kzgWCk+EUcjk9ASTU202b54miwtedcNLRTsKfv3RcxdOeYARQvBD3/ENvdZ4AyEsMxcuorUmGSaUZel2bmnTjmqfE7L+t4LsvxojhC6flDoIT+FLf6Oc44wB6zDWYMpKAIOthj2UhcGWDqRDeYogDPB8hRzRxo1mQJaFrK7EeEoThjV07lhZXGViaoL2WJN4kIGDeli/8OgT535qmGdbpPSsc0MJFR19/vQ5xrsdas2ODRGi5oukNTbxJQDvyA/90Ni8Xv2ldrf5lrPnzrvTpx+XSimCMEQqSavVYOuWMS6du3h9e/OuKT/0K1YkKyt2IvDwnATlwUjNu04SmpGiYN2JSSQmLylLQxB4eL7CWoenFZ6nCEIfzw/YtGWKYlS464y1sJlmeanH5GqPKIoYDjJMqanVa2tCuFPT49OvVko5gUCoqsi3tLDM3KUV4nRObp7awaA/+KMP3Xr7pSNHjkjlh96vL68t/8Ti4qxYWFiQ23dsFzt2bKfVajIxMUGtXmd1ec15zvz7wshY2+KHG82GEw5RaEN/GFMWBikknhRgwRmD1QZtKoEcjo1S6npKWRGLhiytgI0uKqRmtMb3FGNjLXShN0iI/tpglKH5xIPMlbmRcZw8uP+KrXmzXXt5rgucc0IKqDdqjHfHrS1LYQpzJgi8t375znvf2QNz2223IZWQj5dZYQZrfbltyxaarRbGmBE3Jm08jGU86J9+6NzweJwODhZFSRB4VnqKqB7RbjdxStEbDllYXGWtNyDLS7KsQJcG6SpWU1xmsF2nknSlNcvSgniQ0lsZsDS/xrnTM8xfWkIIyaA3ZBinCCFI+imL86uUpRHaOfqD4UukJ2+UnqDRiKjXaxVYcgYvEHbr9i006+F7b7v/0T//4SNHilH9yclP3HX3rzcD743jE1Nngyh0pijtegnHaSOKPKfVatQ/8/v/aWoYp99eQadKteqcRXmKZiOi2W7iRxHDNGNhaZWVXjUVMk2zajWLkiIvqlUtq3JrmmYbOnFjLVlWkCQFg7hkdWVIb61PoTVmVM5NkpThMCXwA7m0uErgBy9pT43fWAqQni+Vr6rSj6fQRUKj4bN159bVQ4dQsx/5yEY7lvzO7zyk/vauE5+Z7Iz9hyAIhLEWicDg0AiBCC1Cbfut9/7ZL4R+mGptcZU0Dt/3KoDh+/ieT71eozvepdVuojxJUpasDhN6w5TeIGUY5wzjjDjLybWhMJbSWHKtyYuyKhpYVymWRqnoWHeM8akJxqcmaLRbtNotrHX01xI8qYKwN1RXeBF7u106QVBFBekRRk2iWo1ut+2OH8dsaTY3qoresePH7eFDqOs3X/vB++cf+ff1Ru0F2lizs9FQeyYmmLi6gcu1u+PBR165dIX92dnF+W8sjfbWoeU6DeQpD2cdSht8z6PRqFPqStyapcWoZGuwugImAoGQssqyqipZhfJG1UvlK8J6jdJorHB4fiWckVKQxgXDJOfgdJvvOLCH6W6b8akJculxbmGRE7Oz3Htxrurhipp1AG5+UvTtCXCHOMS/fuc78x///m9+V2DMb71293be9OL91BsRJKkgrAmTld0HF9bmI1UfejS7jbG6M0UuqoJcWan9BFXnnB0RgV4lkKnXa+Ac5ahOva4Hdc6BBE/6BL5PrV6dS89XG6DnSWmVxbqKcdE6wxjD119/DVONiLmZS0S+oDs5yYu2jXOg2+BVO7bw8OwCd5yeVf9gB97B0fwhs5TedfMLdrtX7RpXLku4cGGGIs/ZvXcXL9i7o9m6+6Hdi1JGNX+M6cldBIFCSQ8nDP3hGlkWMxisMBj0ybLK+fiBQo16sDypERE0ag2kJ6rf9/wNotDz1EgkW+JwKCVwtuK8na28v+9VxIO04JcF85eWOHn6HM1GSLPdRTRrJEVM6Cwv3bqZfKCLaqFv5uhoqZ/Sl3XD3h3Zpmbo4mEs8jh3F88viKXVPoFSDAuyRrurmZlTOM3U1DiDOGGtN8BZCMIWjXoDZwKkaCBFj7LMKbOSTVMT7Nmzm4szM/i+z3DQpxHWyfOUItEY50iylCRJcM4ShsFIQ16lpJVWrdo9GRrhoN3tkhQluS45e2mR61+wD2EsorQI40AoCmNd0KyZf7TXMs4za3XoOo1xpIBOt8sT5+ddnpUihbzw5CUp/TRPssDkCdu3bWF6apK5uTl6vSFraysMkx5uBDV9L6QsLJ2xKZK44NKlZV5w3XVEUYfJTZuIBzGXLl1EFyVGCzzlE4Vh1dnXHsOgkCOlP0rieYrID+ivnqZRM2yd2oy2jvksY6k/YGJ+kWwYk0lotxuydEI4XV4EWLzmybF9HsAtwFFg81hDBc5Wvf9CEkQRWVmp8JTneZObJnvnHnmiXwvDTpYmZEmMdYLpqUnGOmN0x8box336vR55kTHo9Wm3u9SjOtgSsAz6a+zas5ekyOmOj2ErYSfDYY9cFwgUUvp0J6bpTk6jswLjLJNTk6yurJAMB1w4e45mLaQVeJRFRiE8Z4UvhmnCzOISQ1O61pKSS7lZfHgw+DTAocNPjgbaMLritZv5yvIlTg36btNkF+XVqDWbIk1SgmazuXdqzH9AiMz3FM4ZF4WhyPOStbU+SRbjLER+iG00CcMAa6qeS2tKiizBH/FkC7OzzC8ubkgslKpKuTII2Lf/IJ2xCYSrmi60tEgBcTIgyxLyPCEMfXTpMbe06Jq2xAs8JtptnJT0jWUwyE0w1fIK3/vY0fd/ZOnYoUNKXNZ26FHN9bUOxLsW0ieaRn+CQn9jox6aHZu7qlkLGaYZyLDRMKYrPM9KJciTlP7aGmPdySq7Eo40TonjmDRLRw0vFussZ2fmyNKYsqxg6/LKKlhHrVFDWYU1lqheZ/PWHUxMTLGwuIQpSyyOeqNRaVqKgmazxfL8RfI0QUrHxPi0WJm5yObxjtvUrnF2YYlBUtBs1kVucMb3/+c/PvLjyBHxtne9qyy74z+36vx0Ya2HdNZdvXMbE1M72X7F3po1dkII4ayxICBNK+eTZSnGaDzfIwx8ojBgfLzD9h1b2bxlExNTExTGMIxjJFWNu9AlRlcMCTJgbHIbtdY4gyRFKkWz2UL5PmEY0u2O4fs+eZrSH/QxxtBpNrWVqnexl53bualre4MBq8PEecorAk+pQVI+8u77Zj/rQBy+bJWfYrQ4etQeO3RI/fA73v2gU8EHSu2pxy5eKjs1n+W1JfvgyUfl2Ytze2tR1PeVwvc8wjBiXRhqtKbfW2M46JMkQ+ZmLzJz/hwLl2aIez06zRazi/MsLC+htaaSesSAoN1q47RmbXGePB5QZAkrq4s0GjXGutW/1cOIifExnLXOU5KJTnvh/SdO/WAw3rh9T6cjHz4zU/ZXB6IResEg1Qsx8hdvu+02zajJ7n/bYHri4MFK7OfJW3qFO7HUi4PzM7PCaWc+ded9bm1u+XvDKJjA80BUJILWhjjOiAdD0iynMJosz6ryjKk4MaMLrDGkpWaQpISeTy2KRuBD0++tEvdX0UVGGg9J45gwCKhHIVmaUpqSdqcFOAKJ3TQ5jvPEfTdvn9r3iq2T39dPBkI6/FKo4XxavvOL5xZe/LY//KsPAkL8A3MR5N+b2W2FgO//7fedW6ltumk252e/vDy42LCl//2vuVHsajZepbNs7zDL0GUhsjzB8yXKU9RrdTqtJvUoIgx86o36qPAuEFKhfI96WENJSa0WVgW4sJJftNstmo0WmzZvpt3p0Gw2qNdCkkGf3vICRTag0ahXjSwjltUPgnPjuLW1QbK6kBQzqfKOpc2JV/7L937kp37j03fOjMZ6uX/2nJN1mTbA7/z0D24LLsz+wp6J8R9rNDv+u+58iBlj2bxpirDWotMdJ01S0jTFGMNwMCQvU1QQkKYZ3joragxrvQHWFGzdvIk4STYql7WoRqPZpBZFTE1voigLwijAVx5FWYAQTG/ZRjKMeejuO7UXhN7EWOP33/UXH37rD9900w7RcNl7Pva5RYBjhw6pQ8ePVxnRVzLyY9QDIo4fOiQP/8Z7Z4D/87d/6PAf7VDJT46Ndd4024vH86x0kIii3tjgq5WnCKKQQpejikeJFSPKd1T21cYSZ/lI2V8xqEEQ0mq20KZkZWWJWq1GlhhUvZq7oKSiTOLqLgDfx/cVCFFWi3P7hfXbX24BDh89ap72GB8BjuPHjXMIbjkixNGjdwJ3fucbbv71Zr3+0whhiiL3emsreH6ALnOMlmij6cfDEU5WG2IbKaskoiq1WpqtxogVtSO9WKX7xjmKLCOKQpSAKKh0Y0HgM+j3aTTqeEqSFYUWAnfo4MHg2MmTpfgKLhnz/unbgnBw1P3km94U/ubLXlb+6H1fWlDSp7QGWUl38UbNn2VZOax2ozFqGtcbdaosS6tKh1RkWYYnKyeorQUpKE2JEjDWaqF1TuApsIYiSwmiCN8P8JQkCn2cdfhRXQAsTE39o1v5GY3mGk9TI44etVs2TzvP93HWkJeavMgpioyiyCnKYiRQlxURYcyGOigMQ5rNJmEYIkbCOyEEzUYT3w8wuqQoy1HDSvXv1pmKapKSsiyqZlIhqdXrOKReT5Ofu3lkN1cvv2XzZnZdsYOtW7dQq9Wq9oFRnmu0piwKiiLfyIrseq/UqFHFWkucJhUdXJYbZd1GvU7kByOFkqjO7agiksZx5Si12egWEDz9i8S+4sGK1mnTbFaazaLQLK8s45ylHlX6kCzPR4K6sqpaej6irGpaVilKXZKk2UaX3bpWtMLgksDzcE6jddWsmo4QmvIruca6IkkqVX71Rmhaa3WRk6UprUadTqc9agUShEEw2o6VbsRpg5Ky0oyOWBDf96sV11Wy4fkegVeR/UEgCXw1Es14+L5HEEU0O22CwEcqaDQaBEFAGATF5TvwOV3pwPedthXLIaSk22nje5I4TlBK0Go2ibMMrS1GlzhrECMiIAxDHI7hcLjxekZXqiQ/8DbE8ZUMSyKlh1QeTrCh0g/8AGcMWpfFV22ltdbWaI1zljyvHFi9ViMKgorJlBI3KsyLdc5s1GqslMIZS7/fHw10ERvtB+6ybtsNxRFVRPA9b8PzV4wKWOfyURvdc2+0E8qVpSEbdcVDpceWShEGAThLEPjUopB6o7GhJhaiclxFqUFIijKvJBojRkQpBUJWU3BG+rQg8PE9RRQEBJ5P6PlIz8MhCH1vdKZvfu6NFsI5XRYbWrH1ZrJ1qUWrWafVrBFFlUAuyyrmcr1lxVZhrHDWrQIbPZNaG0bEMHbUtSOFIApDlJLr041QI99QZnnlvW/9Kqx0miQYozdUfkIIms0mURSNlEQlRa4psoIiz5/s77AOX6rRMbCxENztKQ9jtMuzHK0rJ+cAbezIAQZVUV9rkqRiTMRIfhnVauXTdWRPY26oLJrtNmNjHRFFEZ7nbWhPlJJoY0f9Fgov8Ddkk2Ho4wXKeYHCgfWluNeOVAp6XTY8qlVLKYjCYNR5b0a6lUquqa0WUkqKshg+3ZX+ir23F9aGSIFSVc9yllXqAmstUa0GUmKArNAbjs33/Spu20oHGgSBcsZdRAlTlqVaF9ytN7QYayjKYmMIjNsY8CTRRSGss3ihWgO4Zvorv73hn73S6xf7SCnmEAonpazUAiGe7z+lwawyQhKM6J48z0erv64WlB5KzYRhMBwp/926VnS97bJqcqloqVJX8NTzPHzliygMaUWN3tO9e0d+pbcwKOkuSOHy0PeFQDjPG0kvbKULK4oqtIRhpf1ed2Ry5L21tUgh/LxM5pxzi1JInBMOVzWI+75f5dJ+pd7VI6eGswiFU0qINI1NSrZyeXXmOTH6ltFNaJvaUxc8X812u11a7bYrddW4UjWvlVhXtS2sT6xZ9/A4gZReNQ5ACCHwF42x8+tHAFdVK8Ogmva+3s7kbCWMX+8AGGnGh3l/uFrdP3jLc2e0AHfkyBF5+Gd+Jo3C4PGgVmfrjp1u55591Op1pFeJ26WsFIKl1ijl4/sh1lbzi5TnjUqxUteKYsUYvWBxOGOckFWoWm9WvXwkn1rvxnfOKaWwQg4gGQBP66oO+XR+Pi/LR6Vw5GXhJicn6Ix3scJRq9U3BlYqr8qxXVUdQXqKNM8QyiPwvPj28+fXSm3OGOtI09wZZ/EDfwRN9UgAX7Urrh+X0A/J8oIsKQb/7d3fn3xVZ/Y7ax9XspJUxMOY8fFxGs0mRoAfBijfIxhNz1h/CiPhq3PWgmBVgLPWfdkYR5wORTWgDZTykMrHOTGaUiM3xt4jpQsCn3q9dl6Iw+YfI/+eNaPXhzp5yjuTphnGGGmsodFosO/AfjZv24p1DjOaO8RolJeQFbzUZemcdfie/zhA4InTWhvyopDWWIqyUiQ8mZZ6I/VglXeHtcgJKYnq0T3PZNG+oji9Pl7TWPtYmucG4StC57LMCq017VaL8akpvN6AMi9wa2sM03jk0Kp6VRQFeCr4DIAXBJd0aQorZVBa67KiEBXTEqCU2HCG1hrCsInvhzIZzuIEX3gm9+PJp3OX5UTUP4Mx5wVQ5KVbXlxidWmZtZVVlFKMT4wT1mskcbLR/V71bQTS95XrNJtfBGh3OivOmtVGvU4U1aqWppHH1qUddQNUSgTf95wurbTaDnrLvQcBDh07Zr8aZ9q5I0fk4Z/5jdQa+5AzhsWFJbcwP8/iwgLLi4uUWaXlnL80V8VlYyqqyPNc4PnCaNNbGgweA1g8fToWgmGr1cY5nO+P6tNCbEzNqLI0RRLHTExPsXXPflaTpLhcpvmcw9BbqgdlPc+7RyjxrVEtckJ2GQx6LC7Ok+cF0vPI8oy0qBq+pfBG84g0eVHkXs9lAF+anS1e1u1mWValqYEnaNaiqhdMqWrGkauSD51lYrCyaF/60pe12p3W1wkh3n/s2DE1mgn63Bq97sxW19bu3t7pMr2lI7XWjGXjtLtTpGlGrdEgTlMevO9B0iSu4rapnJRQXtPfHrY5x1qlnxVlVhSQ20pQ7/u4KMIhiEIPORp64EvJE48+Qq+35jpT237tPb/1W5/5rsOH5/6xOd7PmtGHDh+2ACvnL32xM7V5cfvU9JTv+y7PczExZbFOMkxiutYR+BH3felL9Hqro6kYDueoD/vZJHAeEE5KfD/EmJIky3H0iNIUJUA5R+AHhIGH7yvCWijjQWIa7WyLlf4vO/ixp3OBr/c0Lu5wo6e7+hv79n4yS5LvbW/aZGtRTRnrKkLQWVZWVijLHG2qjjqplHAIV2ojnE7DqiSO++hxYZM0Jgh8tHH0hzGZSuk0atUovbJgmEic1WirkQ754IMPuPHJiW/+yG//l+43Hz686kajZJ7ru3UkYEW2esdgael7daldvdEAIYjjhOEwZnVlhTRJicKKCVVSYnEYq2lWXAG/9J+wrzjotNEGEQbO9yomNAp8pBA4a9BFsTELKS9yCmNtu9ORnXbj7JtvHB+O5kQ99xcKrcfHIs0uDPsrFNbKJInxPJ9+f8Dq6ipJko7mHNVQnofve84vjYjTuCx0ujbiDLDIwiIRogpXSnkEQXXRQRQGeLIi/Z2xIKEzPiGmJ6eEHi69S9zwtvLYoUPq7ysNnhOj19PMRuifGcaJ8aKWUpF0IISxdiSIyylLQ5atF+98V6sJgc3Pv+UVO87cceqccNWlcH1PSpTyMbYaLaK1JYgEzXZnNFs8wGpDo9Gw27Zvl499+cRdD370HX98+dzA5xx733JLBVJ2N7yzAjuXJgm9ft8lWcr4xBT7DlzJniuvYtsVO+lOTBDW6mit8aSgFoblT93U0huDS50bKllx6HLExtQaDTrtTjUmM02xpioDb962TSwuzJlkZeZnj5+kOHz48HOPvS+vZB45ckR+09F39p11DzmjGfYHrt/v019bZTgYVIKbWg3lSaSQ5HnBIE7RjuYP/D+PRutjtYXE+WGIHwYEYXU5YK1WxzpHPIw3unS3bN1qkkFPrF48/+n/8p7333bkyBF5/Cvc1s/GJWGyYoiKT1tr36SL0iEla6XFosiW15g5e4Hl5QWKLEGXRlirkb4XiakwAmKA0KvVGs0WnhIEYdVpOxgOK2p5nR42miRJXLy2RjPy/2a0S+T6g/tq3qJkAToef93r94s4TZTVxjXqDaSSJGlOXpYgPApdDVqp1+pEfuDXvChYf5HSuropq9nfST+m1xvQHwzIsqKamzTqu0zjRDqnUZ4/A7hrrnn6txU/baOPHj1qjxw5It/+q7/7qBTyr9qdMbGy1rfnz51nbnaesBaxa+8etu/aTVSvV/Xo6hh7i6tritEov0E87MRJgim1SLOMNEkxtppfBNV4zlq9TlHmIowiWt3mCs/wNu5ndF/WNaOZ4E1lfy1QUu+7+qDcsWc3XhChpKQeRviBX1FFozGbuda+ll4EYP4jEkSQxnE1zsO5anyXg3LEnvi+T+B7bnV1Tfhh5LZsmlwDOPQ0CMFnxehRfBT/9v/9H3fNzZx74OLZx0UWp7bMMlaXV1jr95ESxiYm8GoR2pSkWekbY5sbVdCwNpobDkiJ9FQ1oV1UUyvHxjrESTXO+sKFi+buu+9PL9ezfk2ueDxy5IgQQjjl15dsYUmS2MkgIMuL0eQ5i3WCqc3bRF4ULgx8ESi/U8U+54IgMGEUEYThqElVonXV2+EHPhKB1RrP80nitK98Vvha32t5dETBltYE2hkGvTWanTY79uwhDEOiqEaepjjrqNebzloLXtQaRXwBAqE8/DAkiGqoIMA4QakNUS0asS11WxSGer1+6hfe+e75yy5V+Bpd5jlCvsM48y0CU5bMXThPPByQFQUgiBp10jSlyHNXakM/zpoA73rbRxRC+lIpUD5hvYkX1vDDkPZYB4Qgy1KGaeZc1ejygHNw5LWvVc+LG0zzQrOy0sM4UDgGvUqtq52h0WyyeevWkUpIU5qiAfDw+Z4USinPC/D9gDKvhpG7ih6qhLOlJk0zpPIoi3zu6daknxOjfd+3pbakWYlzoPxqeo0xDiEU9WaL8alNzjpwxoUA415HBZ7yxQh+BlGIE4KoVifyfHSpWev1MaXGWDCWHs+Hu2rX7++wxhUCidGmGgViq+Evnqfo93uURcmWHVdQazbw/EpbsaKV5wdhIDwPFUQoP8QYS6vZqGbvW4uvFFlZiqIsALHydCUXz6rR6/d3eL5MLBYnBWlekCRDytEs/SAIiZOYeqPF5PQUjXZDACyltQBkGEV1onpTIBWNRpNGo0GaxRRFVolsPF/iDAp3DuDk0yjPPifb2/O9NKrVcEKSFgVJklY3G4Yh9Xodo6uudykUeZptAliObU0oWVeev3H/xli3S5FXnQJJnuMsTvmeyMs8LfsrTzzdSuVzciux1mVcak0U1V2ej9r7y0r03mhE5EXV1JokKdqKLQCG1He26Rlj8ITAD0JC3ydeXSaO42pMkHXOIoXvy4e7f3L84jMNV8/KSq9f8xD6ftZptzeUB6bUrK4sjybOjSobnhQTU1NIL9wCkAO6LJU1Fm0t3e4YRZ6QJjFZlhPVW4SNhjXWkcfD24+Cfe0zDFfPitE3j8JHPQqzZrO5cfHIsD8gS1Li4ZCyqAYcxmksWu027VZjCqDm+/UyL33nDGEtQknHYG2piuna0up0cM5RiwKakfflZx6snrXtXXlSKWwuqJRARVGgraHIcgZrPbwwJ2o0GfaHSCkwjg5A1k+2Wl9IXZa21WjI1eUFemvLBLUmB/YewBlHlhWy1WjQajRmnw0n9uw4spGkKQxrzvNGAxDzHF1kWFMghaPMc3RRoPyANM0p8rxF1WjWKYqcfm/V5VlKqS2NsWm2XLGXMGqSFSXjk9POr7XQQu1en7n/vLlePQw8l7qqrJoMB+RpTJbFVS+WVJj5S+zYd0A0my3O9Yftn3njCxqffGy4xXgg/NxZrdm3/yriLMNoTV5khLUacRxTawbkJvwh5/gfQtxqnum12c9eyJJSa2MZ9PrEcZ9yNORhaXGe+bkZ5i9d4PGTDwlblq7RaEcnzw/3pJnekuUZYRRina2GIo7u0fLCgMnpTaRpqpYW5p1T/ovf8fM/dwMId+jQIfW8WGnP99N4ZcDK8gpGJygVIIRCSA9d5Dgcy/OXcA7b6bTV4rK9OgijeukEnXYHay0rK8tEaUKr3SaqN0izlLHuOHFWmGGOd0GnPwTc/bzZ3kWekmUZu/YdwNqqWyeMKg1ZmsSsLC0icWhtXL3ZZmJi6kXx3HB7ENaYnJwSRZHjeZJkOCCNh4xPThKFIZump3ECeWl+mUCFb3DOKSGE+YeuY/3qbe+RTDHP83qcDChtQXdyms7kJtrdCTZt3cGeK69hz5UH6XSnqNebMowiupu2vzgtyysbrRZal6IoMvK8oNFoUJQFF8+fp9/vkWcpzZond22bcmPdzt73/fovv+RyzP81PdPVYBXJyuwcg5VlfG891a4mSoa1Gu1uF12UYjAYsLAyeInwvF2+rxj2exIcnXZ7I1mp16txecPhkPPnzpOlQ+tFgXd+bvHaZ/rZ5bMTpSEutKrXGzTbLQaDAYNeD8+vROmtZqO6rARFu9N1Sgi2bp24X3nK5nlhdZE731NVIT/LaLRaNNsd0tH80ChqsLzUl1uign/zXa87c3md/GuEyEb5tAxKnKXeajA5PUVZliwvLbG6WlUvrdaAI2o2nDCand1wdrpT/6tmrS6DMHBrS/NYUzA+3mV6ehxPSVqtFoPhEF+WbG1mtmbWeODEYzcATI2uu/qaOLJ1hBT6+i7rnC3SXEqnaDRbVdVRKUqd46zFk4LVlTkRL56hf7F42ad/5+hL3/Rv/8BYV/uhRq3myjwXWmviJGN1dYWrdm3lla98Ofs2t8kHS+7xRx7n7vvu21XtsFu/dnH62CjN+3c/8u0nOw2ZFdpIC873PFrNNlGtgUXSaIRsm6jTNKtieqzO9m07J3/tD/8g+MTnb/vhwfz5P12auySUtcbEPeL5i1y5rcF3fevLufHaXSzMXGDb9p3ceONLmRgfrwHccs1PuK/ZSq/zz5+8/Y5//c2veUk9/cRddnF1VZoc8kLRrin2HRjnyh1bOXf2LLOPFu5f/MsfEeeeOP34+z74/tQ5xN7N3YcePHGCVRu7G1/8Ql5yw3W88jUvwws8lheX+Ju//ltckbF7/x6MVPYZFjieBaNvucUdPXqUscmtBwJf8n//6+92te4ES4trTE10yPprOGtZWFjhL47fw6te/Qp78OCV8raPfuSDn3xwPgb4/u/5lrN/d9s4995zj3zta27kBddfRxanKB0x0W3zrf/Ht/LwA/eyees0b3jj631+4b9vXD76tQlZ1aWBTLT9B6amJilL6+Zm5vn43/w19agi+/ppwZcfeRQ/0O7b3vIt6oMf/qj5H+/7+N+Jkcr36iu33XX9C16QTE5Myf6w7wqtCT0PnGWwtsrmLVOEtUguLqywuty/0jknxeHD5mtm9PHRRsuM3qaU5PbPfZaH7/0S1197DWcfe4wg8JjodlhZXuJFL36x7Y5NiC/eefdfLCHutcZInBObz3N+7+5dJ/fs38djp045a3LCWkiWJORFSbPRYO/eveLshVnmFteuvft9v7KLUc/0V91oB+Lw4ePmb//7T4ZSNW+4854HeNVNr5Hf+OY3cu31LyIIQr54x93c9qlPURQxX/+mb5YPnnzUfvoLX3oHOA4fPiwcSHH4sGmMjd/9ute/hu07ttqJ7hh5kbM0NwdYzpyb4d4v3SvuvvceO9ZtNnyvfsNI1Ca+6kYfP3RIAlyaz6879cgjV5186EEWL83KC+fmWFpcplaPuP7GlzEzM0OWZrYW+OKhBx4+dbGf3uecE8ePH7e33nKLAHjs5ImHu2MdPnfHPRRFhu8LlHDMnD1Du9UhLR11IazVlkI1Xwhw69OM1c/IkZ04WCX0K/3h69Myk5smm/rTn/ioVxrAGpqNqpbVCEPigbZ//D//QPZiezdQHj9+WAFmfabQ6TNPLD305RO8/OU3iM7EFO//k/dzaWYWk+fckJc0az5zWUyRJVycW94KsPg0UZn3zDz3reboUUF/MHyDlA28IBDtVmt0m7hAKklWFgyShCSJyeIY57Ueq2TU1QNbv+P+c3fcJbrtGv/qJ97GI4+e5sEH7h/dTam57TOfol6PaLTr4nO330pUa05fLsX+qhl95MgRKYSw8w9/ZvOfvff9L11emqM7HshkpAZyQKENUgmiIMBqK196001AdJJ3f4BrrvkJB7dtsKlWp3Jqagenz5zjrs/dys4tkwSj4THaWopMY4wR1lgsYpdzTo7kVF9xiimfKSi5eOp89+u+6c0tISt5cqENhbbko5uF48GQMxcu8Io3fr147Wu/Dom8+FSKrULvL7r+Zc3rX/4qPvLhDzI7c56V1TUWF5dYWlxieXGJtX6P/nAoVoc9rnrhdeNAi8vu8PqqGv3Rj/3l2rZtW5M3vPlbSeKEeDCkKIpqIiywY/defvyn/6178zd/k7h47mxx+rEvL12+NdeNPvzd3zUdeBIdD1xnvIvyA4RSaOcodcWsJkXGm7/zu3npDS+V7/v5n5dfdUR29OhRJ4TgF971oYW3HP6hJ179jd/0wu27drnTp04IZy2tTpvpLdu5Yvt2nC7dzOnTbhjH8yt9Ztf7vI5e9nqr87PJi15wDWcfP0HW6+ONrmc2RUGS5IStNt/53d/tbnjlzeLBz956/vt+5VfWLrtC+qvmyJz9wAeUOHzYnD316F31unfd5PSU2XHTTVIqhYgibJa6tfk5tzg3pzuNZuChPnj0Xe9KLqN8uHlx0QGcv3ju0otvfKH73h/9MXHqkUdZXV3DOkuj3mRscpo9+w7QrNXt6plTIo3jzwPu1ltv9QD9VfXe63Eyj/u3n7z7i/+yKDLXHmtbzw9wzol6rS7Gul0xNtYNZmZX7jp95swvjdoQ7JMotnLfZx9/7Pw9X7hTXHntdbzi5Tc6vECMLtaq5gWu9uzFx0+SxalYW136K4DF0QPjK5dvP6M/wjnHb97yU63trdZfBR43Yw3d8XGieg0/CJ0MahdWllf/7E//6MP/+V1/93e9y+ciXf4a/+3Hvq154AUvfmjH1skriqy0jWZIo9GkNCX9Xl/6QY1ms8n5maVjv/fRz3/vsYMHnXiahbxnXC24LGQEv/TW7315vV3b3owiK5XqL6325n/+N//ocagUBP+7M7jekvCb/+5f3HT1/j2/rfP02loUENaq25KSrMQpb7bMzB+//wMfO/Lez342s9b9/Yf3VTWafypWOndMwSH7jzmdy9T5rf/849/72iAKrnLGtsfGxobSU499+o577/7Tj9128Z/zfv/Un/8PVYxpnb3lrckAAAAASUVORK5CYII=" alt="Henni in voller K&ouml;rperh&ouml;he neben einer Ma&szlig;skala">
+    <div class="worte">
+      <b>1 Henni = 1,70 m</b>
+      <span>Die Grundeinheit. Alle Werte auf dieser Seite rechnen dagegen.</span>
+    </div>
+  </div>
+
+  <div class="eingabe">
+    <div class="modi" role="group" aria-label="Was gemessen wird">
+      <button type="button" data-modus="laenge" aria-pressed="true">L&auml;nge</button>
+      <button type="button" data-modus="flaeche" aria-pressed="false">Fl&auml;che</button>
+      <button type="button" data-modus="raum" aria-pressed="false">Raum</button>
+    </div>
+    <label for="wert">Wert eingeben</label>
+    <div class="reihe">
+      <input type="number" id="wert" value="1.7" step="any" inputmode="decimal" aria-label="Zahlenwert">
+      <select id="einheit" aria-label="Einheit"></select>
+    </div>
+    <p class="einheit-erklaerung" id="erklaerung"></p>
+  </div>
+
+  <div class="ergebnis">
+    <div><span class="wert" id="hennis">1</span><span class="einheit" id="hennisWort">Henni</span></div>
+    <p class="dazu" id="dazu"></p>
+    <div class="teilen">
+      <button type="button" id="teilen">Ergebnis teilen</button>
+      <span class="rueckmeldung" id="teilenText"></span>
+    </div>
+  </div>
+
+  <div class="bild">
+    <label>Ma&szlig;stab</label>
+    <div class="figuren" id="figuren"></div>
+    <p class="hinweis-klein" id="figurenText"></p>
+  </div>
+
+  <div class="tabelle" id="tabelle"></div>
+
+  <h2>Bezugsgr&ouml;&szlig;en</h2>
+  <div class="vkopf">
+    <p class="unter">Der eingegebene Wert steht an seiner Stelle in der Reihe.</p>
+    <button type="button" id="wuerfel">Beispiel &uuml;bernehmen</button>
+  </div>
+  <div id="vergleiche"></div>
+
+  <p class="fuss">
+    Grundeinheit: 1&nbsp;Henni = 1,70&nbsp;m. Daraus abgeleitet:
+    1&nbsp;Quadrat-Henni = 2,89&nbsp;m&sup2;, 1&nbsp;Kubik-Henni = 4,913&nbsp;m&sup3;.
+    Alle &uuml;brigen Umrechnungen exakt nach Norm: Zoll 25,4&nbsp;mm &middot;
+    Fu&szlig; 0,3048&nbsp;m &middot; Yard 0,9144&nbsp;m &middot; Meile 1609,344&nbsp;m &middot;
+    Seemeile 1852&nbsp;m.
+  </p>
+</div>
+
+<script>
+  const HENNI = 1.7
+
+  // Henni, freigestellt. Das Bild steht EINMAL im Dokument (oben in der Definition) und
+  // wird von dort geholt — sonst laege dieselbe Datenzeile zweimal in der Datei und
+  // verdoppelte sie auf 79 KB.
+  const BILD = document.getElementById('heldenbild').src
+  const SEITENVERHAELTNIS = 61 / 190
+
+  /**
+   * Die drei Betriebsarten.
+   *
+   * `potenz` ist der Kern: Ein Henni ist 1,70 m, ein Quadrat-Henni also 1,70² = 2,89 m²
+   * und ein Kubik-Henni 1,70³ = 4,913 m³. Die Umrechnung ist damit eine einzige Zeile,
+   * ohne Sonderfall je Betriebsart.
+   */
+  const MODI = {
+    laenge: {
+      potenz: 1,
+      eins: 'Henni', viele: 'Hennis',
+      erklaerung: '1 Henni = 1,70 m',
+      einheiten: [
+        ['Millimeter', 0.001], ['Zentimeter', 0.01], ['Meter', 1], ['Kilometer', 1000],
+        ['Zoll', 0.0254], ['Fuß', 0.3048], ['Yard', 0.9144],
+        ['Meile', 1609.344], ['Seemeile', 1852], ['Henni', 1.7],
+      ],
+      start: 'Meter',
+      dinge: [
+        ['DIN-A4-Blatt', 0.297, 'Längsseite'],
+        ['Türklinke', 1.05, 'Griffhöhe nach Norm'],
+        ['Kühlschrank', 1.85, 'übliche Bauhöhe'],
+        ['Zimmertür', 2.01, 'Normmaß'],
+        ['Geschosshöhe', 2.8, 'Wohnungsbau'],
+        ['Doppeldeckerbus', 4.4, 'London, Routemaster'],
+        ['Giraffe', 5.5, 'ausgewachsener Bulle'],
+        ['ICE-Wagen', 26.4, 'Länge'],
+        ['Blauwal', 30, 'größtes bekanntes Tier'],
+        ['Fußballfeld', 105, 'Längsseite'],
+        ['Kölner Dom', 157.38, 'Südturm'],
+        ['Eiffelturm', 330, 'mit Antenne'],
+        ['Zugspitze', 2962, 'Höhe über dem Meer'],
+        ['Mount Everest', 8848.86, 'Neuvermessung 2020'],
+      ],
+    },
+    flaeche: {
+      potenz: 2,
+      eins: 'Quadrat-Henni', viele: 'Quadrat-Hennis',
+      erklaerung: '1 Quadrat-Henni = 1,70 × 1,70 m = 2,89 m²',
+      einheiten: [
+        ['Quadratzentimeter', 0.0001], ['Quadratmeter', 1], ['Ar', 100],
+        ['Hektar', 10000], ['Quadratkilometer', 1000000],
+        ['Quadratfuß', 0.09290304], ['Quadrat-Henni', 2.89],
+      ],
+      start: 'Quadratmeter',
+      dinge: [
+        ['DIN-A4-Blatt', 0.06237, '21,0 × 29,7 cm'],
+        ['Doppelbett', 3.6, '1,80 × 2,00 m'],
+        ['Pkw-Stellplatz', 12.5, '2,50 × 5,00 m'],
+        ['Zweizimmerwohnung', 55, 'Richtwert'],
+        ['Klassenzimmer', 60, 'Richtwert'],
+        ['Tennisplatz', 260.87, 'mit Auslauf'],
+        ['Basketballfeld', 420, '28 × 15 m'],
+        ['Fußballfeld', 7140, '105 × 68 m'],
+        ['Petersplatz', 33000, 'Rom'],
+        ['Fürstentum Monaco', 2020000, 'Staatsgebiet'],
+      ],
+    },
+    raum: {
+      potenz: 3,
+      eins: 'Kubik-Henni', viele: 'Kubik-Hennis',
+      erklaerung: '1 Kubik-Henni = 1,70 × 1,70 × 1,70 m = 4,913 m³',
+      einheiten: [
+        ['Milliliter', 0.000001], ['Liter', 0.001], ['Kubikzentimeter', 0.000001],
+        ['Kubikmeter', 1], ['Kubik-Henni', 4.913],
+      ],
+      start: 'Kubikmeter',
+      dinge: [
+        ['Getränkedose', 0.00033, '0,33 Liter'],
+        ['Eimer', 0.01, '10 Liter'],
+        ['Badewanne', 0.15, 'Nutzinhalt'],
+        ['Kühlschrank', 0.3, 'Nutzinhalt'],
+        ['Kofferraum', 0.45, 'Mittelklasse'],
+        ['Wohnzimmer', 50, '4,0 × 5,0 × 2,5 m'],
+        ['Reisebus', 60, 'Innenraum'],
+        ['Einfamilienhaus', 450, 'umbauter Raum'],
+        ['Schwimmbecken', 2500, 'olympisch, 50 m'],
+        ['Heißluftballon', 2800, 'gefüllt'],
+      ],
+    },
+  }
+
+  let modus = 'laenge'
+
+  const zahl = (n, stellen) =>
+    n.toLocaleString('de-DE', { maximumFractionDigits: stellen, minimumFractionDigits: 0 })
+
+  /** Sinnvolle Nachkommastellen: große Zahlen brauchen keine, kleine mehr. */
+  function klug(n) {
+    const b = Math.abs(n)
+    if (b === 0) return '0'
+    if (b >= 1000) return zahl(n, 0)
+    if (b >= 100) return zahl(n, 1)
+    if (b >= 1) return zahl(n, 2)
+    if (b >= 0.01) return zahl(n, 3)
+    // Keine Exponentialschreibweise, solange sie vermeidbar ist: „0,00185“ ist lesbar,
+    // „1,85e-3“ nicht. Erst bei sehr kleinen Werten bleibt nichts anderes.
+    if (b >= 0.000001) return zahl(n, 8)
+    return n.toExponential(2).replace('.', ',')
+  }
+
+  function figur(hoehe, blass, voll = 62) {
+    const h = Math.round(hoehe)
+    const b = Math.max(3, Math.round(voll * SEITENVERHAELTNIS))
+    if (!blass) {
+      return `<img src="${BILD}" width="${b}" height="${Math.round(voll)}" alt="" draggable="false">`
+    }
+    // Der angefangene Henni wird NICHT gestaucht, sondern von unten angeschnitten —
+    // wie beim Messen an einer Wand.
+    return `<span class="teil rest" style="width:${b}px;height:${h}px">
+      <img src="${BILD}" width="${b}" height="${Math.round(voll)}" alt="" draggable="false">
+    </span>`
+  }
+
+  /**
+   * Wie gross eine einzelne Figur sein darf.
+   *
+   * Statt ab einer festen Zahl abzuschneiden, schrumpfen die Figuren mit der Menge — so
+   * bleibt der Kasten ungefaehr gleich hoch und trotzdem sind alle da. Erst wenn eine
+   * Figur unter etwa 14 Pixel faellt, ist sie nicht mehr als Mensch zu erkennen; ab da
+   * hilft ein weiteres Verkleinern niemandem mehr.
+   */
+  function figurGroesse(anzahl) {
+    if (anzahl <= 20) return 62
+    if (anzahl <= 60) return 34
+    if (anzahl <= 150) return 22
+    return 14
+  }
+
+  /** Obergrenze: ab hier ist die Menge selbst die Aussage, nicht mehr die Einzelfigur. */
+  const HOECHSTZAHL = 300
+
+  function fuelleEinheiten() {
+    const s = document.getElementById('einheit')
+    const m = MODI[modus]
+    s.innerHTML = m.einheiten
+      .map(([name, f]) => `<option value="${f}"${name === m.start ? ' selected' : ''}>${name}</option>`)
+      .join('')
+    document.getElementById('erklaerung').textContent = m.erklaerung
+  }
+
+  function zeichne() {
+    const m = MODI[modus]
+    const roh = parseFloat(document.getElementById('wert').value)
+    const faktor = parseFloat(document.getElementById('einheit').value)
+    const basis = (isFinite(roh) ? roh : 0) * faktor          // in m, m² oder m³
+    const proHenni = Math.pow(HENNI, m.potenz)
+    const hennis = basis / proHenni
+
+    document.getElementById('hennis').textContent = klug(hennis)
+    document.getElementById('hennisWort').textContent =
+      Math.abs(hennis - 1) < 1e-9 ? m.eins : m.viele
+
+    const grundeinheit = ['', 'Meter', 'Quadratmeter', 'Kubikmeter'][m.potenz]
+    document.getElementById('dazu').textContent = `entspricht ${klug(basis)} ${grundeinheit}`
+
+    // ── Maßstab ─────────────────────────────────────────────────────────────
+    const figuren = document.getElementById('figuren')
+    const text = document.getElementById('figurenText')
+    // Bei Fläche und Raum im Raster: eine Reihe waere dort eine falsche Aussage,
+    // es geht nicht um eine Strecke.
+    figuren.classList.toggle('raster', m.potenz > 1)
+    const ganze = Math.floor(Math.abs(hennis))
+    const rest = Math.abs(hennis) - ganze
+
+    if (!isFinite(hennis) || hennis < 0) {
+      figuren.innerHTML = ''
+      figuren.style.gridTemplateColumns = ''
+      text.textContent = 'Negative Werte lassen sich nicht darstellen.'
+    } else {
+      const gezeigt = Math.min(ganze, HOECHSTZAHL)
+      const gr = figurGroesse(gezeigt)
+      // Im Raster moeglichst quadratisch anordnen — sonst waechst es bei vielen Figuren
+      // in die Hoehe statt in die Flaeche.
+      figuren.style.gridTemplateColumns = m.potenz > 1 && gezeigt > 0
+        ? `repeat(${Math.ceil(Math.sqrt(gezeigt))}, max-content)`
+        : ''
+      let s = figur(gr, false, gr).repeat(gezeigt)
+      const zeigeRest = rest > 0.02 && ganze <= HOECHSTZAHL
+      if (zeigeRest) s += figur(Math.max(6, gr * rest), true, gr)
+      figuren.innerHTML = s || figur(Math.max(6, 62 * rest), true, 62)
+
+      if (ganze > HOECHSTZAHL) {
+        text.textContent = `${klug(hennis)} ${m.viele} — dargestellt sind ${HOECHSTZAHL}, mehr lassen sich nicht mehr auseinanderhalten.`
+      } else if (ganze === 0) {
+        text.textContent = `Weniger als ein ganzer ${m.eins}.`
+      } else {
+        text.textContent = `${ganze} ${ganze === 1 ? m.eins : m.viele}${zeigeRest ? ' und ein angefangener' : ' — ohne Rest'}.`
+      }
+    }
+
+    // ── Tabelle ────────────────────────────────────────────────────────────
+    document.getElementById('tabelle').innerHTML = m.einheiten
+      .filter(([name]) => !name.includes('Henni'))
+      .map(([name, f]) =>
+        `<div class="zeile"><span class="name">${name}</span><span class="zahl">${klug(basis / f)}</span></div>`)
+      .join('')
+
+    // ── Bezugsgrößen ────────────────────────────────────────────────────────
+    const liste = m.dinge.map(([was, w, klein]) => ({ was, w, klein, du: false }))
+    liste.push({ was: 'Eingegebener Wert', w: basis, klein: 'aktuell', du: true })
+    liste.sort((a, b) => a.w - b.w)
+    document.getElementById('vergleiche').innerHTML = liste.map((d) => {
+      const h = d.w / proHenni
+      return `<div class="vergleich${d.du ? ' du' : ''}">
+        <span class="was">${d.was}<small>${d.klein}</small></span>
+        <span class="hennis">${klug(h)} ${Math.abs(h - 1) < 1e-9 ? m.eins : m.viele}</span>
+      </div>`
+    }).join('')
+  }
+
+  function setzeWert(basiswert) {
+    // In der gerade gewählten Einheit anzeigen, nicht stumm auf die Grundeinheit setzen.
+    const faktor = parseFloat(document.getElementById('einheit').value)
+    const feld = document.getElementById('wert')
+    feld.value = String(Number((basiswert / faktor).toPrecision(6)))
+    zeichne()
+  }
+
+  // ── Umschalter ───────────────────────────────────────────────────────────
+  document.querySelectorAll('.modi button').forEach((b) => {
+    b.addEventListener('click', () => {
+      modus = b.dataset.modus
+      document.querySelectorAll('.modi button').forEach((x) =>
+        x.setAttribute('aria-pressed', String(x === b)))
+      fuelleEinheiten()
+      document.getElementById('wert').value = { laenge: 1.7, flaeche: 55, raum: 50 }[modus]
+      zeichne()
+    })
+  })
+
+  // ── Teilen ───────────────────────────────────────────────────────────────
+  document.getElementById('teilen').addEventListener('click', async () => {
+    const wert = document.getElementById('hennis').textContent
+    const wort = document.getElementById('hennisWort').textContent
+    const satz = `${wert} ${wort} — umgerechnet mit dem Henni-Rechner:`
+    const rueck = document.getElementById('teilenText')
+    const adresse = location.origin + location.pathname
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'Henni-Rechner', text: satz, url: adresse })
+        return
+      }
+      await navigator.clipboard.writeText(`${satz} ${adresse}`)
+      rueck.textContent = 'In die Zwischenablage kopiert.'
+    } catch (e) {
+      // Ein abgebrochenes Teilen ist kein Fehler — nur echtes Scheitern melden.
+      if (e && e.name === 'AbortError') return
+      rueck.textContent = 'Hat nicht geklappt — bitte von Hand kopieren.'
+    }
+    setTimeout(() => { rueck.textContent = '' }, 3000)
+  })
+
+  // ── Beispiel übernehmen ──────────────────────────────────────────────────
+  document.getElementById('wuerfel').addEventListener('click', () => {
+    const m = MODI[modus]
+    const treffer = m.dinge[Math.floor(Math.random() * m.dinge.length)]
+    setzeWert(treffer[1])
+    const zeile = [...document.querySelectorAll('.vergleich')]
+      .find((z) => z.querySelector('.was').textContent.startsWith(treffer[0]))
+    if (zeile) {
+      zeile.classList.add('blinkt')
+      zeile.scrollIntoView({ block: 'center', behavior: 'smooth' })
+      setTimeout(() => zeile.classList.remove('blinkt'), 1200)
+    }
+  })
+
+  document.getElementById('wert').addEventListener('input', zeichne)
+  document.getElementById('einheit').addEventListener('change', zeichne)
+  fuelleEinheiten()
+  zeichne()
+</script>
+</body>
+</html>
